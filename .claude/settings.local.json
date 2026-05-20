@@ -43,7 +43,22 @@
       "Bash(SIGCROP_INTRA_OP_NUM_THREADS=auto .venv/bin/python -c \"from sigcrop.config import Settings; print\\('intra:', Settings\\(\\).intra_op_num_threads\\)\")",
       "Bash(SIGCROP_INTRA_OP_NUM_THREADS=AUTO .venv/bin/python -c \"from sigcrop.config import Settings; print\\('intra:', Settings\\(\\).intra_op_num_threads\\)\")",
       "Bash(SIGCROP_INTRA_OP_NUM_THREADS=4 .venv/bin/python -c \"from sigcrop.config import Settings; print\\('intra:', Settings\\(\\).intra_op_num_threads\\)\")",
-      "Bash(SIGCROP_MODEL_DIR=__TRACKED_VAR__/models SIGCROP_INTRA_OP_NUM_THREADS=auto .venv/bin/pytest -q)"
+      "Bash(SIGCROP_MODEL_DIR=__TRACKED_VAR__/models SIGCROP_INTRA_OP_NUM_THREADS=auto .venv/bin/pytest -q)",
+      "Bash(SIGCROP_MODEL_DIR=\"$\\(pwd\\)/models\" .venv/bin/uvicorn sigcrop.api.app:app --host 127.0.0.1 --port 8080 --log-level info)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8080/healthz)",
+      "Bash(gh pr *)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Bash(git remote *)",
+      "Bash(curl -s -X POST http://127.0.0.1:8080/v1/crop-signature -H 'Authorization: Bearer dev' -F 'file=@samples/Gemini_Generated_Image_8b41128b41128b41.png;type=image/png' -F return_format=inline_b64 -F confidence_threshold=0.05 -o /tmp/crop_lowconf.json -w 'HTTP %{http_code}\\\\n')",
+      "Bash(python3 -c ' *)",
+      "Bash(SIGCROP_MODEL_DIR=\"$\\(pwd\\)/models\" .venv/bin/uvicorn sigcrop.api.app:app --host 127.0.0.1 --port 8080 --log-level warning)",
+      "WebFetch(domain:x.com)",
+      "Bash(.venv/bin/mypy src *)",
+      "Bash(SIGCROP_MODEL_DIR=\"$\\(pwd\\)/models\" .venv/bin/pytest -q)",
+      "Bash(SIGCROP_MODEL_DIR=\"$\\(pwd\\)/models\" .venv/bin/pytest -q tests/unit/test_run.py)"
     ]
   }
 }
