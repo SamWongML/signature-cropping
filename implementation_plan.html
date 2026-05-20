@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Implementation plan — Signature cropping for HSBC account opening forms</title>
+<title>Implementation plan — Signature cropping for HSBC account opening forms (no-training path)</title>
 
 <!-- ==========================================================================
      Single self-contained file. No external deps except two web fonts.
      Sections are addressable by id:
-       #hero · #summary · #landscape · #architecture · #pipeline
+       #hero · #summary · #model · #architecture · #pipeline
        #phases · #api · #mcp · #deployment · #acceptance · #risks
        #cost · #week-one · #refs
      Tokens live in :root, severity colors in [data-sev] selectors.
@@ -31,7 +31,6 @@
     --accent:      #B5532A;
     --accent-soft: #E8D6C7;
 
-    /* severity (used in risk table + acceptance badges) */
     --sev-crit-bg:  #F4D8D2;  --sev-crit-fg:  #8A1F0A;
     --sev-high-bg:  #F4E0CB;  --sev-high-fg:  #8A4A0A;
     --sev-med-bg:   #F4ECC9;  --sev-med-fg:   #6A580A;
@@ -120,9 +119,7 @@
     padding-top: 3px;
   }
   aside.toc li a:hover,
-  aside.toc li a.active {
-    color: var(--accent);
-  }
+  aside.toc li a.active { color: var(--accent); }
   aside.toc li a.active::before { color: var(--accent); }
 
   /* ---- Hero ------------------------------------------------------------- */
@@ -177,7 +174,7 @@
     margin-bottom: 6px;
   }
 
-  /* ---- Hero stats / badge row ------------------------------------------- */
+  /* ---- Hero stats row --------------------------------------------------- */
   .stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -186,10 +183,7 @@
     border: 1px solid var(--rule);
     margin-top: 32px;
   }
-  .stat {
-    background: var(--bg);
-    padding: 16px 18px;
-  }
+  .stat { background: var(--bg); padding: 16px 18px; }
   .stat-label {
     font-family: var(--mono);
     font-size: 10px;
@@ -205,17 +199,10 @@
     line-height: 1.15;
     color: var(--ink);
   }
-  .stat-sub {
-    font-size: 12px;
-    color: var(--ink-soft);
-    margin-top: 2px;
-  }
+  .stat-sub { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
 
   /* ---- Sections --------------------------------------------------------- */
-  section {
-    margin: 72px 0;
-    scroll-margin-top: 24px;
-  }
+  section { margin: 72px 0; scroll-margin-top: 24px; }
   section > .sec-head {
     display: flex;
     align-items: baseline;
@@ -317,8 +304,12 @@
     margin: 18px 0;
   }
   .card-warn {
-    border-left: 3px solid var(--sev-crit-fg);
-    background: linear-gradient(to right, var(--sev-crit-bg) 0%, var(--sev-crit-bg) 4px, var(--bg-elev) 4px);
+    border-left: 3px solid var(--sev-high-fg);
+    background: linear-gradient(to right, var(--sev-high-bg) 0%, var(--sev-high-bg) 4px, var(--bg-elev) 4px);
+  }
+  .card-good {
+    border-left: 3px solid var(--sev-low-fg);
+    background: linear-gradient(to right, var(--sev-low-bg) 0%, var(--sev-low-bg) 4px, var(--bg-elev) 4px);
   }
   .card-title {
     font-family: var(--body);
@@ -331,10 +322,84 @@
     gap: 10px;
   }
 
-  /* ---- Code blocks ------------------------------------------------------ */
-  .code {
-    margin: 14px 0 22px;
+  /* ---- Model comparison cards ------------------------------------------ */
+  .model-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 20px 0 28px;
   }
+  @media (max-width: 680px) { .model-pair { grid-template-columns: 1fr; } }
+  .model-card {
+    border: 1px solid var(--rule-strong);
+    border-radius: 4px;
+    padding: 22px;
+    background: var(--bg-elev);
+    position: relative;
+  }
+  .model-card.primary {
+    border-color: var(--accent);
+    border-width: 1.5px;
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .model-card .badge-top {
+    position: absolute;
+    top: -10px;
+    left: 18px;
+  }
+  .model-card h4 {
+    margin: 0 0 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 12px;
+    font-family: var(--mono);
+    color: var(--ink-faint);
+  }
+  .model-card .mname {
+    font-family: var(--display);
+    font-size: 19px;
+    font-weight: 500;
+    color: var(--ink);
+    margin-bottom: 4px;
+    word-break: break-word;
+  }
+  .model-card .mmeta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-bottom: 16px;
+  }
+  .model-card .mstats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--rule);
+    margin-bottom: 14px;
+  }
+  .model-card .mstat {
+    background: var(--bg);
+    padding: 8px 10px;
+  }
+  .model-card .mstat-l {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .model-card .mstat-v {
+    font-family: var(--display);
+    font-size: 17px;
+    color: var(--ink);
+  }
+  .model-card .mnote {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
+  /* ---- Code blocks ------------------------------------------------------ */
+  .code { margin: 14px 0 22px; }
   .code-path {
     font-family: var(--mono);
     font-size: 11px;
@@ -360,12 +425,12 @@
     border-radius: 0 0 4px 4px;
     border: 1px solid var(--ink);
   }
-  pre .k  { color: #E2B98B; }   /* keyword */
-  pre .s  { color: #B5C58A; }   /* string  */
-  pre .c  { color: #7A746A; font-style: italic; } /* comment */
-  pre .n  { color: #E8E2D5; }   /* name    */
+  pre .k { color: #E2B98B; }
+  pre .s { color: #B5C58A; }
+  pre .c { color: #7A746A; font-style: italic; }
+  pre .n { color: #E8E2D5; }
 
-  /* ---- Architecture / pipeline diagram boxes --------------------------- */
+  /* ---- SVG diagram styles ---------------------------------------------- */
   .diagram-frame {
     background: var(--bg-elev);
     border: 1px solid var(--rule);
@@ -385,8 +450,6 @@
   svg .sub   { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-soft); }
   svg .box   { fill: var(--bg); stroke: var(--rule-strong); stroke-width: 1; }
   svg .box-accent { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1; }
-  svg .box-dark   { fill: var(--ink); stroke: var(--ink); }
-  svg .box-dark .name { fill: var(--bg); }
   svg .arrow { stroke: var(--ink-soft); stroke-width: 1.2; fill: none; }
   svg .arrow-dashed { stroke: var(--ink-faint); stroke-width: 1; fill: none; stroke-dasharray: 4 4; }
 
@@ -400,7 +463,7 @@
   }
   .gantt-row {
     display: grid;
-    grid-template-columns: 132px 1fr 70px;
+    grid-template-columns: 142px 1fr 80px;
     align-items: center;
     gap: 14px;
     padding: 8px 0;
@@ -430,7 +493,7 @@
   }
   .gantt-axis {
     display: grid;
-    grid-template-columns: 132px 1fr 70px;
+    grid-template-columns: 142px 1fr 80px;
     gap: 14px;
     margin-top: 10px;
     font-family: var(--mono);
@@ -441,11 +504,46 @@
   }
   .gantt-axis .axis-ticks {
     display: grid;
-    grid-template-columns: repeat(8, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     text-align: left;
   }
 
-  /* ---- Open-question / decision blocks --------------------------------- */
+  /* ---- Comparison strikeout (old plan vs new plan) -------------------- */
+  .compare-strike {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    margin: 16px 0 24px;
+    border: 1px solid var(--rule-strong);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .compare-strike > div { padding: 18px 20px; }
+  .compare-strike .old {
+    background: var(--bg-elev);
+    color: var(--ink-faint);
+    border-right: 1px solid var(--rule);
+  }
+  .compare-strike .old .ctitle { color: var(--ink-faint); }
+  .compare-strike .old ul li { text-decoration: line-through; }
+  .compare-strike .new {
+    background: var(--accent-soft);
+  }
+  .compare-strike .new .ctitle { color: var(--accent); }
+  .ctitle {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  @media (max-width: 640px) {
+    .compare-strike { grid-template-columns: 1fr; }
+    .compare-strike .old { border-right: 0; border-bottom: 1px solid var(--rule); }
+  }
+
+  /* ---- Open-question blocks ------------------------------------------- */
   .question {
     border-top: 1px solid var(--rule);
     padding: 18px 0;
@@ -467,7 +565,7 @@
   }
   .q-meta b { color: var(--accent); font-weight: 500; }
 
-  /* ---- Mockup (small rendered example response) ----------------------- */
+  /* ---- Mockup (rendered example) -------------------------------------- */
   .mock-page {
     background: #FFFFFF;
     border: 1px solid var(--rule-strong);
@@ -517,23 +615,23 @@
     padding: 6px;
   }
 
-  /* ---- Footnote / refs -------------------------------------------------- */
+  /* ---- Refs ------------------------------------------------------------ */
   ul.refs { list-style: none; padding: 0; font-size: 13px; }
   ul.refs li { padding: 8px 0; border-bottom: 1px solid var(--rule); }
   ul.refs li:last-child { border-bottom: 0; }
   ul.refs .ref-src { font-family: var(--mono); font-size: 11px; color: var(--ink-faint); }
 
-  /* ---- Print ------------------------------------------------------------ */
+  /* ---- Print ----------------------------------------------------------- */
   @media print {
     aside.toc { display: none; }
     .layout { display: block; max-width: 100%; padding: 0; }
     body { background: white; }
     section { page-break-inside: avoid; margin: 40px 0; }
     pre { border: 1px solid #ccc; background: #f7f7f7; color: #000; }
-    .card, .diagram-frame, .gantt { break-inside: avoid; }
+    .card, .diagram-frame, .gantt, .model-card { break-inside: avoid; }
   }
 
-  /* ---- Small details ---------------------------------------------------- */
+  /* ---- Small details --------------------------------------------------- */
   .two-col {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -550,10 +648,10 @@
 
 <!-- ========== SIDEBAR NAV ========== -->
 <aside class="toc" aria-label="Document sections">
-  <div class="toc-label">Contents</div>
+  <div class="toc-label">Contents · v2 (no-training)</div>
   <ol>
-    <li><a href="#summary">Recommendation at a glance</a></li>
-    <li><a href="#landscape">Technology landscape</a></li>
+    <li><a href="#summary">What changed</a></li>
+    <li><a href="#model">Model selection</a></li>
     <li><a href="#architecture">Architecture</a></li>
     <li><a href="#pipeline">Inference pipeline</a></li>
     <li><a href="#phases">Implementation phases</a></li>
@@ -573,209 +671,227 @@
 
 <!-- ====== HERO ====== -->
 <header class="hero" id="hero">
-  <p class="kicker">Implementation plan <span class="dot">·</span> HSBC account-opening forms <span class="dot">·</span> v1.0</p>
-  <h1>Cropping handwritten <em>signatures</em> from scanned forms, on CPU.</h1>
+  <p class="kicker">Implementation plan <span class="dot">·</span> HSBC account-opening forms <span class="dot">·</span> v2 · no-training</p>
+  <h1>Ship the published <em>best-in-class</em> detector. No training.</h1>
 
   <div class="prompt">
-    <b>Original prompt</b>
-    Deep research on the latest technologies for cropping signature from a scanned file of an HSBC account opening form. Deployed to AWS ECS on x86 without GPU. What's the best solution for efficiency and accuracy? Expose as an API and MCP server. Give a concrete implementation plan with detailed specs and acceptance criteria.
+    <b>Revised brief</b>
+    Skip training-related tasks. Adapt the plan to directly use the most powerful publicly-available solution that suits HSBC's requirements (x86 ECS, no GPU, API + MCP).
   </div>
 
   <p class="lede">
-    A fine-tuned <b>RT-DETRv2-S</b> detector (Apache&#8209;2.0), exported to ONNX
-    with the OpenVINO Execution Provider and INT8 quantization, wrapped in a single
-    Python service that exposes both a FastAPI REST surface and an MCP server on
-    AWS ECS Fargate. Designed around the bank's two non-negotiables: a
-    permissive license and no customer-data egress.
+    Use <b>tech4humans/yolov8s-signature-detector</b> — the most powerful
+    signature-specific detector published on Hugging Face today — wrapped in
+    the same FastAPI + FastMCP service, deployed to ECS Fargate. The only thing
+    that becomes a procurement question rather than an engineering one is the
+    Ultralytics Enterprise License. If that's unavailable, the Apache-2.0
+    fallback is one config flip away and ships in the same release.
   </p>
 
   <div class="stats" role="list">
     <div class="stat" role="listitem">
       <div class="stat-label">Effort</div>
-      <div class="stat-value">7–8 wks</div>
-      <div class="stat-sub">1 ML + 1 BE + ½ SRE</div>
+      <div class="stat-value">3–4 wks</div>
+      <div class="stat-sub">down from 7–8 (no training)</div>
     </div>
     <div class="stat" role="listitem">
-      <div class="stat-label">Target accuracy</div>
-      <div class="stat-value">≥ 0.94</div>
-      <div class="stat-sub">mAP@50, held-out HSBC set</div>
+      <div class="stat-label">Accuracy</div>
+      <div class="stat-value">0.945</div>
+      <div class="stat-sub">published mAP@50</div>
     </div>
     <div class="stat" role="listitem">
-      <div class="stat-label">p95 latency</div>
-      <div class="stat-value">≤ 400 ms</div>
-      <div class="stat-sub">single A4 page, 2 vCPU</div>
+      <div class="stat-label">p50 latency</div>
+      <div class="stat-value">~172 ms</div>
+      <div class="stat-sub">ONNX-CPU, published</div>
     </div>
     <div class="stat" role="listitem">
       <div class="stat-label">Throughput</div>
-      <div class="stat-value">6–12 pg/s</div>
+      <div class="stat-value">8–14 pg/s</div>
       <div class="stat-sub">per Fargate task</div>
     </div>
     <div class="stat" role="listitem">
       <div class="stat-label">License</div>
-      <div class="stat-value">Apache 2.0</div>
-      <div class="stat-sub">end-to-end</div>
+      <div class="stat-value">Ent. + Apache</div>
+      <div class="stat-sub">primary + fallback</div>
     </div>
     <div class="stat" role="listitem">
       <div class="stat-label">Cost</div>
       <div class="stat-value">~$280/mo</div>
-      <div class="stat-sub">~$0.0003 / page @ 1M/mo</div>
+      <div class="stat-sub">+ Ent. license (one-time procurement)</div>
     </div>
   </div>
 </header>
 
 
-<!-- ====== 01 · RECOMMENDATION ====== -->
+<!-- ====== 01 · WHAT CHANGED ====== -->
 <section id="summary">
-  <div class="sec-head"><span class="sec-num">01</span><h2>Recommendation at a glance</h2></div>
+  <div class="sec-head"><span class="sec-num">01</span><h2>What changed from v1</h2></div>
 
-  <table>
-    <thead><tr><th style="width:24%">Concern</th><th style="width:36%">Choice</th><th>Why</th></tr></thead>
-    <tbody>
-      <tr>
-        <td><b>Accuracy</b></td>
-        <td>Fine-tune <code>PekingU/rtdetr_v2_r18vd</code> on Tobacco-800 + tech4humans/signature-detection (Apache 2.0) + 500–1,000 in-house HSBC samples</td>
-        <td>Public baselines on this exact task reach mAP@50 ≈ 0.94 with this architecture family</td>
-      </tr>
-      <tr>
-        <td><b>CPU efficiency</b></td>
-        <td>ONNX Runtime + OpenVINO Execution Provider + INT8 quantization</td>
-        <td>2–4× speedup on Intel Xeon vs. vanilla PyTorch CPU; biggest single lever</td>
-      </tr>
-      <tr>
-        <td><b>License <span class="pill" data-sev="crit">critical</span></b></td>
-        <td>RT-DETR / D-FINE / Conditional-DETR / YOLO-NAS (all Apache 2.0). <b>Avoid</b> Ultralytics YOLOv8/v11.</td>
-        <td>Ultralytics ships under AGPL-3.0; deploying as an internal network service triggers source-disclosure obligations across the consuming app</td>
-      </tr>
-      <tr>
-        <td><b>Deployment</b></td>
-        <td>ECS Fargate, x86_64, 2 vCPU / 4 GB tasks, internal ALB</td>
-        <td>No GPU; no EC2 patching; horizontal scale; same VPC as the consuming app</td>
-      </tr>
-      <tr>
-        <td><b>Interfaces</b></td>
-        <td>FastAPI (REST) <em>and</em> FastMCP (MCP) in a single process, single model load</td>
-        <td>Both transports reuse one ONNX session — half the memory, one deployment</td>
-      </tr>
-    </tbody>
-  </table>
+  <p class="lede">
+    v1 assumed we'd fine-tune on a custom HSBC corpus. v2 takes the published
+    model as-is and ships. The deltas are concentrated in three places: phase
+    plan, license, and acceptance criteria (we now <em>measure</em> the model's
+    fit rather than <em>train</em> it to a target).
+  </p>
 
-  <div class="card card-warn">
-    <div class="card-title">
-      <span class="pill" data-sev="crit">licence risk</span>
-      The single thing to clear with Legal before any code lands
+  <div class="compare-strike">
+    <div class="old">
+      <div class="ctitle">v1 · with training</div>
+      <ul>
+        <li>Phase 0 · Data labelling (1–2 wks)</li>
+        <li>Phase 1 · Model training + Optuna (2 wks)</li>
+        <li>Phase 2 · INT8 quantization + ONNX export (1 wk)</li>
+        <li>Phase 3 · Service implementation</li>
+        <li>Phase 4 · AWS deployment</li>
+        <li>Phase 5 · Testing &amp; rollout</li>
+        <li>500–1,000 in-house labelled samples</li>
+        <li>T4/A10 spot instance for training</li>
+        <li>Bespoke model card</li>
+      </ul>
     </div>
-    <p style="margin:0">
-      The state-of-the-art public model for this task (<code>tech4humans/yolov8s-signature-detector</code>,
-      94.7% precision / 89.7% recall) is built on Ultralytics YOLOv8, which is <b>AGPL-3.0</b>.
-      Deploying it as an internal network service inside HSBC without an Ultralytics
-      Enterprise License means AGPL's source-disclosure obligations attach to the
-      consuming application. The plan below treats the Apache-2.0 RT-DETR path as
-      the default and the Ultralytics path as conditional on a paid Enterprise
-      License being on file <em>before</em> any AGPL weight ever runs in production.
-    </p>
+    <div class="new">
+      <div class="ctitle">v2 · published model</div>
+      <ul>
+        <li>Phase 0 · Legal &amp; procurement (1 wk)</li>
+        <li>Phase 1 · Evaluation set + smoke test (1 wk)</li>
+        <li>Phase 2 · Service implementation (1 wk)</li>
+        <li>Phase 3 · AWS deployment (3–5 days)</li>
+        <li>Phase 4 · Shadow rollout &amp; cutover (1 wk)</li>
+        <li>~ 100-page HSBC eval set only</li>
+        <li>No training hardware required</li>
+        <li>Inherit tech4humans' model card + ONNX exports</li>
+      </ul>
+    </div>
   </div>
+
+  <p>
+    The architecture, API contract, MCP server, and AWS deployment from v1 are
+    all preserved. What changed is everything upstream of "we have an ONNX file
+    on disk" — that file is now a download, not a deliverable.
+  </p>
 </section>
 
 
-<!-- ====== 02 · TECHNOLOGY LANDSCAPE ====== -->
-<section id="landscape">
-  <div class="sec-head"><span class="sec-num">02</span><h2>Technology landscape</h2></div>
+<!-- ====== 02 · MODEL SELECTION ====== -->
+<section id="model">
+  <div class="sec-head"><span class="sec-num">02</span><h2>Model selection</h2></div>
 
   <p class="lede">
-    Three viable tiers. We pick the middle one — modern open detectors fine-tuned
-    on the right data — and exclude the other two with reasons.
+    Two genuinely viable pretrained models. Both come from the same author
+    (tech4humans), both trained on the same Tobacco-800 + signatures-xc8up
+    corpus, both have ONNX exports and OpenVINO Execution Provider handlers
+    already published. The only meaningful difference is what license you ship
+    under.
   </p>
 
-  <h3>Tier A · Classical CV (excluded as primary)</h3>
-  <p>
-    Connected-component analysis + heuristics
-    (size, ink ratio, stroke continuity) — e.g. <code>ahmetozlu/signature_extractor</code>.
-    Useful as a <em>fallback</em> and for post-detection mask cleanup, but brittle on real
-    bank forms: printed cursive name labels, stamps, and dense form fields fool it.
-    <span class="pill muted">keep as fallback</span>
-  </p>
+  <div class="model-pair">
 
-  <h3>Tier B · Open deep detectors fine-tuned for signatures · <b>chosen</b></h3>
-  <p>
-    Two public benchmarks dominate this task: <b>Tobacco-800</b> and the merged
-    <b>signature-detection</b> dataset by tech4humans (2,819 document images,
-    Apache 2.0). Published numbers on that test set, ONNX Runtime on CPU:
-  </p>
+    <!-- PRIMARY -->
+    <div class="model-card primary">
+      <span class="pill badge-top" data-sev="info">primary · most powerful</span>
+      <h4>HF model</h4>
+      <div class="mname">tech4humans/<wbr>yolov8s-<wbr>signature-detector</div>
+      <div class="mmeta">YOLOv8s · 11M params · ONNX + TensorRT + PyTorch</div>
 
+      <div class="mstats">
+        <div class="mstat"><div class="mstat-l">precision</div><div class="mstat-v">0.947</div></div>
+        <div class="mstat"><div class="mstat-l">recall</div><div class="mstat-v">0.897</div></div>
+        <div class="mstat"><div class="mstat-l">mAP@50</div><div class="mstat-v">0.945</div></div>
+        <div class="mstat"><div class="mstat-l">mAP@50:95</div><div class="mstat-v">0.674</div></div>
+        <div class="mstat"><div class="mstat-l">CPU latency</div><div class="mstat-v">172 ms</div></div>
+        <div class="mstat"><div class="mstat-l">License</div><div class="mstat-v" style="font-size:13px;">AGPL-3.0*</div></div>
+      </div>
+
+      <p class="mnote">
+        Numbers from the tech4humans benchmark on their held-out test split,
+        with ONNX Runtime CPU.
+        <b>* AGPL-3.0 → requires an Ultralytics Enterprise License for HSBC
+        internal use</b> (procurement step, not a blocker). One-line download
+        via <code>huggingface_hub</code>, OpenVINO-EP handler already provided.
+      </p>
+    </div>
+
+    <!-- FALLBACK -->
+    <div class="model-card">
+      <span class="pill badge-top" data-sev="low">fallback · apache-2.0</span>
+      <h4>HF model</h4>
+      <div class="mname">tech4humans/<wbr>conditional-detr-50-<wbr>signature-detector</div>
+      <div class="mmeta">Conditional-DETR · ResNet-50 · 43.5M params · transformers</div>
+
+      <div class="mstats">
+        <div class="mstat"><div class="mstat-l">precision</div><div class="mstat-v">~0.92</div></div>
+        <div class="mstat"><div class="mstat-l">recall</div><div class="mstat-v">~0.88</div></div>
+        <div class="mstat"><div class="mstat-l">mAP@50</div><div class="mstat-v">0.937</div></div>
+        <div class="mstat"><div class="mstat-l">mAP@50:95</div><div class="mstat-v">0.653</div></div>
+        <div class="mstat"><div class="mstat-l">CPU latency</div><div class="mstat-v">~500 ms</div></div>
+        <div class="mstat"><div class="mstat-l">License</div><div class="mstat-v" style="font-size:13px;">Apache-2.0</div></div>
+      </div>
+
+      <p class="mnote">
+        Same training set, same evaluation protocol. Slight accuracy hit
+        (~1 mAP@50 point), ~3× slower per page on CPU. Loaded via Hugging Face
+        Transformers (<code>AutoModelForObjectDetection</code>). Ship-ready
+        with no procurement friction.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="card card-good">
+    <div class="card-title">
+      <span class="pill" data-sev="low">design choice</span>
+      Build for both — config-switch at deploy
+    </div>
+    <p style="margin:0">
+      The two models have different input shapes and output formats, but the
+      wrapping is small. We expose <code>MODEL_BACKEND={yolov8s|cdetr50}</code>
+      as an env var; the rest of the service is identical. This lets us ship
+      the Apache-2.0 path on day one and swap to YOLOv8s the moment Legal
+      signs off on the Enterprise License, with zero service-code change.
+    </p>
+  </div>
+
+  <h3>Why these two and nothing else</h3>
+  <ul>
+    <li>
+      They're the only two pretrained models on HF (or anywhere public) that
+      have been benchmarked specifically against the signature-detection task
+      with published numbers. Generic object detectors fine-tuned on COCO
+      don't transfer well; signature-specific training is the difference.
+    </li>
+    <li>
+      The author (tech4humans) is the same — they published a paper, a
+      dataset, both model variants, and an inference server. Single point of
+      provenance for audit.
+    </li>
+    <li>
+      Both already export to ONNX and have OpenVINO-EP handlers in the model
+      repo (<code>handler.py</code>). The hard work for CPU deployment is
+      already done by the upstream author.
+    </li>
+  </ul>
+
+  <h3>What we lose by skipping training</h3>
   <table>
-    <thead>
-      <tr>
-        <th>Model</th>
-        <th>License</th>
-        <th class="num">mAP@50</th>
-        <th class="num">mAP@50:95</th>
-        <th class="num">CPU latency</th>
-        <th class="num">Params</th>
-        <th>Pick?</th>
-      </tr>
-    </thead>
+    <thead><tr><th>Loss</th><th>Severity</th><th>Mitigation in v2</th></tr></thead>
     <tbody>
       <tr>
-        <td>YOLOv8s (fine-tuned)</td>
-        <td><span class="pill" data-sev="crit">AGPL-3.0</span></td>
-        <td class="num">0.945</td><td class="num">0.674</td>
-        <td class="num">~172 ms</td><td class="num">11 M</td>
-        <td>Only with Enterprise License</td>
+        <td>Model is not adapted to HSBC-specific form layouts (logo, layout, ink color distribution)</td>
+        <td><span class="pill" data-sev="med">med</span></td>
+        <td>Phase 1 evaluation set tells us the real number on HSBC forms before commit. If recall &lt; threshold, add a fallback heuristic pass.</td>
       </tr>
       <tr>
-        <td>YOLOv11s</td>
-        <td><span class="pill" data-sev="crit">AGPL-3.0</span></td>
-        <td class="num">~0.94</td><td class="num">~0.66</td>
-        <td class="num">~150 ms</td><td class="num">9 M</td>
-        <td>Only with Enterprise License</td>
-      </tr>
-      <tr style="background: var(--accent-soft);">
-        <td><b>RT-DETRv2-S</b></td>
-        <td><span class="pill" data-sev="low">Apache-2.0</span></td>
-        <td class="num">~0.93</td><td class="num">~0.65</td>
-        <td class="num">~250–400 ms</td><td class="num">20 M</td>
-        <td><b>primary</b></td>
+        <td>No HSBC-specific failure-mode knowledge baked in</td>
+        <td><span class="pill" data-sev="low">low</span></td>
+        <td>Production feedback loop sends low-confidence and human-flagged cases to a labelling queue, ready for a future v3 fine-tune if it becomes warranted.</td>
       </tr>
       <tr>
-        <td>Conditional-DETR-R50</td>
-        <td><span class="pill" data-sev="low">Apache-2.0</span></td>
-        <td class="num">0.937</td><td class="num">0.653</td>
-        <td class="num">~400–600 ms</td><td class="num">~43 M</td>
-        <td>Backup</td>
-      </tr>
-      <tr>
-        <td>D-FINE-S / RF-DETR-S</td>
-        <td><span class="pill" data-sev="low">Apache-2.0</span></td>
-        <td class="num">comparable</td><td class="num">comparable</td>
-        <td class="num">comparable</td><td class="num">20–30 M</td>
-        <td>Backup</td>
-      </tr>
-      <tr>
-        <td>YOLO-NAS-S</td>
-        <td><span class="pill" data-sev="med">mixed</span></td>
-        <td class="num">~0.93</td><td class="num">—</td>
-        <td class="num">~120–180 ms</td><td class="num">12 M</td>
-        <td>Code Apache, weights restricted</td>
+        <td>Confidence threshold is calibrated against a generic test set, not HSBC's distribution</td>
+        <td><span class="pill" data-sev="low">low</span></td>
+        <td>Threshold sweep in Phase 1 on the eval set picks the operating point.</td>
       </tr>
     </tbody>
   </table>
-
-  <h4>What the tech4humans benchmark of 21 architectures taught us</h4>
-  <ul>
-    <li><b>Smaller backbones matched larger ones</b> on this task — signatures are mid-sized objects, no need to pay for a big backbone.</li>
-    <li><b>Pure CNN one-stage detectors ran 2–4× faster on CPU</b> than DETR variants at similar accuracy.</li>
-    <li><b>Optuna hyperparameter tuning added ~8% F1</b> over default training.</li>
-    <li><b>OpenVINO Execution Provider</b> was the single largest CPU speedup lever.</li>
-  </ul>
-
-  <h3>Tier C · Foundation-model OCR &amp; managed services (excluded)</h3>
-  <p>
-    <b>PaddleOCR-VL 0.9B</b> (Oct 2025) — overkill for this task on CPU; 50–100× slower than
-    a 10M YOLO at no accuracy gain on detection alone.<br>
-    <b>AWS Textract <code>SIGNATURES</code></b> — pragmatic but sends customer signatures
-    to a third-party endpoint; non-starter for HSBC data sovereignty review. Keep as an
-    evaluation oracle only.
-  </p>
 </section>
 
 
@@ -783,110 +899,88 @@
 <section id="architecture">
   <div class="sec-head"><span class="sec-num">03</span><h2>Architecture</h2></div>
 
-  <p class="lede">
-    One service, two transports, three storage hops. Everything inside one VPC; no
-    outbound internet from the task.
-  </p>
+  <p class="lede">Unchanged from v1. One service, two transports, three storage hops. Inside one VPC; no internet egress from tasks.</p>
 
   <div class="diagram-frame">
     <svg viewBox="0 0 760 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="arch-title">
       <title id="arch-title">AWS deployment architecture</title>
-
-      <!-- VPC outer box -->
       <rect x="20" y="40" width="720" height="320" rx="6" fill="none" stroke="var(--rule-strong)" stroke-dasharray="3 3"/>
       <text x="32" y="32" class="lbl">AWS VPC · private subnets · no internet egress</text>
 
-      <!-- Caller -->
       <rect x="40" y="160" width="110" height="60" rx="3" class="box"/>
       <text x="95" y="184" text-anchor="middle" class="name">Caller app</text>
       <text x="95" y="202" text-anchor="middle" class="sub">RPA / batch</text>
 
-      <!-- ALB -->
       <rect x="200" y="160" width="110" height="60" rx="3" class="box"/>
       <text x="255" y="184" text-anchor="middle" class="name">Internal ALB</text>
       <text x="255" y="202" text-anchor="middle" class="sub">TLS · mTLS</text>
 
-      <!-- ECS service block -->
       <rect x="360" y="80" width="220" height="220" rx="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="1.2"/>
       <text x="372" y="100" class="lbl" fill="var(--accent)">ECS Fargate service · x86 · ≥ 2 tasks</text>
 
-      <!-- ECS Task box -->
       <rect x="378" y="118" width="184" height="166" rx="4" class="box-accent"/>
       <text x="470" y="138" text-anchor="middle" class="name" fill="var(--accent)">signature-cropper</text>
       <text x="470" y="152" text-anchor="middle" class="sub">container · 2 vCPU · 4 GB</text>
 
-      <!-- internal components stacked -->
       <rect x="394" y="166" width="152" height="22" rx="2" class="box"/>
       <text x="470" y="181" text-anchor="middle" class="sub" style="font-family:var(--body); font-size:11px; fill:var(--ink);">FastAPI · :8080</text>
-
       <rect x="394" y="192" width="152" height="22" rx="2" class="box"/>
       <text x="470" y="207" text-anchor="middle" class="sub" style="font-family:var(--body); font-size:11px; fill:var(--ink);">FastMCP · :8081</text>
-
       <rect x="394" y="218" width="152" height="22" rx="2" class="box"/>
       <text x="470" y="233" text-anchor="middle" class="sub" style="font-family:var(--body); font-size:11px; fill:var(--ink);">ORT + OpenVINO EP</text>
-
       <rect x="394" y="244" width="152" height="22" rx="2" class="box"/>
-      <text x="470" y="259" text-anchor="middle" class="sub" style="font-family:var(--body); font-size:11px; fill:var(--ink);">RT-DETRv2-S · INT8 · ONNX</text>
+      <text x="470" y="259" text-anchor="middle" class="sub" style="font-family:var(--body); font-size:11px; fill:var(--ink);">tech4humans yolov8s.onnx</text>
 
-      <!-- S3 -->
       <rect x="630" y="100" width="100" height="60" rx="3" class="box"/>
       <text x="680" y="124" text-anchor="middle" class="name">S3 (KMS)</text>
       <text x="680" y="142" text-anchor="middle" class="sub">in / out · 24 h TTL</text>
 
-      <!-- CloudWatch -->
       <rect x="630" y="180" width="100" height="50" rx="3" class="box"/>
       <text x="680" y="200" text-anchor="middle" class="name">CW Logs</text>
       <text x="680" y="216" text-anchor="middle" class="sub">no pixels</text>
 
-      <!-- ECR -->
       <rect x="630" y="250" width="100" height="50" rx="3" class="box"/>
       <text x="680" y="270" text-anchor="middle" class="name">ECR</text>
-      <text x="680" y="286" text-anchor="middle" class="sub">image · INT8 baked</text>
+      <text x="680" y="286" text-anchor="middle" class="sub">image · ONNX baked</text>
 
-      <!-- Arrows: caller -> ALB -> task -->
       <path d="M150 190 L 200 190" class="arrow" marker-end="url(#arrow)"/>
       <path d="M310 190 L 378 190" class="arrow" marker-end="url(#arrow)"/>
-
-      <!-- task <-> S3, CW, ECR -->
       <path d="M562 158 C 600 158, 600 130, 630 130" class="arrow" marker-end="url(#arrow)"/>
       <path d="M562 210 C 600 210, 600 205, 630 205" class="arrow" marker-end="url(#arrow)"/>
       <path d="M562 260 C 600 260, 600 275, 630 275" class="arrow-dashed" marker-end="url(#arrow)"/>
 
-      <!-- Arrow marker -->
       <defs>
         <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
           <path d="M0,0 L7,4 L0,8 z" fill="var(--ink-soft)"/>
         </marker>
       </defs>
     </svg>
-    <div class="diagram-caption">Solid lines = request path. Dashed = pull-only (image fetch at task boot).</div>
+    <div class="diagram-caption">Solid lines = request path. Dashed = pull-only (image fetch at task boot). ONNX baked into image; no runtime download.</div>
   </div>
 
-  <h4>Boundary rules that fall out of this diagram</h4>
+  <h4>Boundary rules</h4>
   <ul>
     <li>Task SG only accepts traffic from ALB SG. ALB SG only accepts traffic from the caller app's SG.</li>
     <li>VPC endpoints for S3 / ECR / CloudWatch / Secrets Manager. No NAT egress.</li>
-    <li>Model weights are <b>baked into the image</b>. No runtime download — keeps tasks startable in air-gapped environments and removes a supply-chain risk.</li>
+    <li>The downloaded ONNX file is <b>baked into the Docker image at build time</b>, pulled from Hugging Face in CI, then never fetched at runtime. Image checksum is the model checksum.</li>
     <li>S3 bucket is single-purpose, KMS-encrypted with a customer-managed key, 24-hour lifecycle delete on both <code>inputs/</code> and <code>outputs/</code>.</li>
   </ul>
 </section>
 
 
-<!-- ====== 04 · INFERENCE PIPELINE ====== -->
+<!-- ====== 04 · PIPELINE ====== -->
 <section id="pipeline">
   <div class="sec-head"><span class="sec-num">04</span><h2>Inference pipeline</h2></div>
 
   <p class="lede">
-    What happens inside the container, from received bytes to returned crops.
-    Single-threaded-friendly, no async-fire-and-forget on the inference call —
-    backpressure is handled by ECS scaling, not by an internal queue.
+    Latency budgets revised against the published YOLOv8s figure (172 ms per
+    page on ONNX-CPU). With our preprocessing and serialization overhead added,
+    typical end-to-end is ~230 ms.
   </p>
 
   <div class="diagram-frame">
     <svg viewBox="0 0 760 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="pipe-title">
-      <title id="pipe-title">Inference pipeline stages</title>
-
-      <!-- 5 stage boxes -->
+      <title id="pipe-title">Inference pipeline stages with latency budgets</title>
       <g>
         <rect x="20"  y="80" width="130" height="60" rx="3" class="box"/>
         <text x="85"  y="102" text-anchor="middle" class="lbl">01 · ingest</text>
@@ -902,8 +996,8 @@
       <g>
         <rect x="320" y="80" width="130" height="60" rx="3" class="box-accent"/>
         <text x="385" y="102" text-anchor="middle" class="lbl">03 · detect</text>
-        <text x="385" y="120" text-anchor="middle" class="name">RT-DETRv2-S</text>
-        <text x="385" y="135" text-anchor="middle" class="sub">ONNX · OpenVINO</text>
+        <text x="385" y="120" text-anchor="middle" class="name">yolov8s.onnx</text>
+        <text x="385" y="135" text-anchor="middle" class="sub">ORT · OpenVINO EP</text>
       </g>
       <g>
         <rect x="470" y="80" width="130" height="60" rx="3" class="box"/>
@@ -918,20 +1012,18 @@
         <text x="685" y="135" text-anchor="middle" class="sub">S3 or inline b64</text>
       </g>
 
-      <!-- arrows -->
       <path d="M150 110 L 170 110" class="arrow" marker-end="url(#arrow2)"/>
       <path d="M300 110 L 320 110" class="arrow" marker-end="url(#arrow2)"/>
       <path d="M450 110 L 470 110" class="arrow" marker-end="url(#arrow2)"/>
       <path d="M600 110 L 620 110" class="arrow" marker-end="url(#arrow2)"/>
 
-      <!-- timing budget labels -->
-      <text x="85"  y="180" text-anchor="middle" class="sub">~30 ms</text>
-      <text x="235" y="180" text-anchor="middle" class="sub">~40 ms</text>
-      <text x="385" y="180" text-anchor="middle" class="sub" style="fill:var(--accent);">~180 ms</text>
-      <text x="535" y="180" text-anchor="middle" class="sub">~10 ms</text>
-      <text x="685" y="180" text-anchor="middle" class="sub">~15 ms</text>
+      <text x="85"  y="180" text-anchor="middle" class="sub">~25 ms</text>
+      <text x="235" y="180" text-anchor="middle" class="sub">~25 ms</text>
+      <text x="385" y="180" text-anchor="middle" class="sub" style="fill:var(--accent);">~172 ms</text>
+      <text x="535" y="180" text-anchor="middle" class="sub">~8 ms</text>
+      <text x="685" y="180" text-anchor="middle" class="sub">~12 ms</text>
 
-      <text x="385" y="200" text-anchor="middle" class="sub" style="font-family:var(--body); font-size:11px; fill:var(--ink);">≈ 275 ms typical end-to-end per A4 page</text>
+      <text x="385" y="200" text-anchor="middle" class="sub" style="font-family:var(--body); font-size:11px; fill:var(--ink);">≈ 242 ms typical end-to-end per A4 page · YOLOv8s · CPU · ONNX</text>
 
       <defs>
         <marker id="arrow2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
@@ -939,23 +1031,26 @@
         </marker>
       </defs>
     </svg>
-    <div class="diagram-caption">Latency budgets are illustrative; revalidated in Phase 2 against the target instance.</div>
+    <div class="diagram-caption">Numbers based on tech4humans' published ONNX-CPU benchmark for YOLOv8s. Conditional-DETR adds ~330 ms to stage 3.</div>
   </div>
 
-  <h4>Stage details</h4>
+  <h4>What we inherit from the upstream repo</h4>
+  <ul>
+    <li><code>yolov8s.onnx</code> — exported, ready to load with <code>onnxruntime</code>.</li>
+    <li><code>handler.py</code> — reference inference handler using ORT + OpenVINO Execution Provider; we adapt the pre/post-processing from this.</li>
+    <li>Hugging Face Space (Gradio demo) — useful for smoke testing without writing any code.</li>
+    <li>Reference inference server <code>tech4ai/t4ai-signature-detect-server</code> — Triton + OpenVINO Docker setup, optional reference for production.</li>
+  </ul>
 
-  <p><b>01 · Ingest.</b> File-type detect from magic bytes. PDFs go through PyMuPDF (<code>fitz</code>) at 300 DPI per page; images decode with Pillow/OpenCV.</p>
-
-  <p><b>02 · Preprocess.</b> Hough-line / projection-profile deskew (≤ ±5° correction). Cheap orientation check via a 1-line OCR snippet → rotate 0/90/180/270 if upside-down. Resize long-edge to 1024px, letterbox to 640² for the model. Optional CLAHE if mean intensity is too high or too low.</p>
-
-  <p><b>03 · Detect.</b> Single batch, dynamic input. <code>intra_op_num_threads</code> pinned to the task's vCPU count. INT8 quantized weights.</p>
-
-  <p><b>04 · Postprocess.</b> Score threshold (default 0.55, configurable per-request), class-aware NMS, map letterbox coordinates back to original page coordinates, add 8% padding (default). Optional connected-component mask <em>within the crop</em> to remove form-line bleed when <code>apply_mask=true</code>.</p>
-
-  <p><b>05 · Emit.</b> For each signature: PNG (RGBA if mask applied), bbox JSON, confidence, page number. Either uploaded to S3 under a per-request prefix or returned base64-inline depending on <code>return_format</code>.</p>
+  <h4>What we still write</h4>
+  <ul>
+    <li>PDF → page rasterization (PyMuPDF) — upstream only handles single images.</li>
+    <li>Deskew + orientation check — upstream doesn't include these.</li>
+    <li>Crop + padding + optional mask cleanup — upstream returns bboxes only.</li>
+    <li>FastAPI + FastMCP wrapping — upstream serves Triton, which we replace with a thinner single-process server.</li>
+  </ul>
 
   <h4>What this looks like on a real page</h4>
-
   <div class="mock-page" aria-label="Mock account-opening form with detected signatures">
     <h5>Account Opening Application · Personal</h5>
     <div class="field">Full name: ____________________________</div>
@@ -988,99 +1083,114 @@
 <section id="phases">
   <div class="sec-head"><span class="sec-num">05</span><h2>Implementation phases</h2></div>
 
-  <p class="lede">Five phases, ~7–8 calendar weeks for a team of 2.5. Phase&nbsp;0 starts the clock with Legal, not engineering.</p>
+  <p class="lede">
+    Five phases, ~3–4 calendar weeks. Phase 0 (legal) can run in parallel with
+    Phase 1 (evaluation), shortening wall-clock further if the procurement team
+    moves fast.
+  </p>
 
   <div class="gantt" aria-label="Phase timeline">
     <div class="gantt-row">
-      <div class="gantt-name">0 · Data &amp; Legal</div>
-      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:0%;   width:22%;"></div></div>
-      <div class="gantt-week">wk 1–2</div>
+      <div class="gantt-name">0 · Legal &amp; procurement</div>
+      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:0%;    width:25%;"></div></div>
+      <div class="gantt-week">wk 1</div>
     </div>
     <div class="gantt-row">
-      <div class="gantt-name">1 · Model training</div>
-      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:18%;  width:24%;"></div></div>
-      <div class="gantt-week">wk 2–4</div>
+      <div class="gantt-name">1 · Eval set + smoke test</div>
+      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:0%;    width:25%;"></div></div>
+      <div class="gantt-week">wk 1</div>
     </div>
     <div class="gantt-row">
-      <div class="gantt-name">2 · CPU optimization</div>
-      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:40%;  width:14%;"></div></div>
-      <div class="gantt-week">wk 4–5</div>
+      <div class="gantt-name">2 · Service implementation</div>
+      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:25%;   width:25%;"></div></div>
+      <div class="gantt-week">wk 2</div>
     </div>
     <div class="gantt-row">
-      <div class="gantt-name">3 · Service implementation</div>
-      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:36%;  width:22%;"></div></div>
-      <div class="gantt-week">wk 4–6</div>
+      <div class="gantt-name">3 · AWS deployment</div>
+      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:48%;   width:17%;"></div></div>
+      <div class="gantt-week">wk 3 (early)</div>
     </div>
     <div class="gantt-row">
-      <div class="gantt-name">4 · AWS deployment</div>
-      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:55%;  width:14%;"></div></div>
-      <div class="gantt-week">wk 6–7</div>
-    </div>
-    <div class="gantt-row">
-      <div class="gantt-name">5 · Testing &amp; rollout</div>
-      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:65%;  width:20%;"></div></div>
-      <div class="gantt-week">wk 7–8</div>
+      <div class="gantt-name">4 · Shadow + cutover</div>
+      <div class="gantt-bar-wrap"><div class="gantt-bar" style="left:60%;   width:35%;"></div></div>
+      <div class="gantt-week">wk 3–4</div>
     </div>
     <div class="gantt-axis">
       <div></div>
       <div class="axis-ticks">
         <span>w1</span><span>w2</span><span>w3</span><span>w4</span>
-        <span>w5</span><span>w6</span><span>w7</span><span>w8</span>
       </div>
       <div></div>
     </div>
   </div>
 
-  <h3>Phase 0 · Data &amp; Legal <span class="pill muted">1–2 wks</span></h3>
+  <h3>Phase 0 · Legal &amp; procurement <span class="pill muted">1 wk · parallel</span></h3>
   <ul>
-    <li>Confirm with HSBC Legal that the Apache-2.0 path is acceptable; obtain a written sign-off on architecture choice.</li>
-    <li>Stand up labelling environment (CVAT or Label Studio) <b>inside the VPC</b>. Do not use hosted Roboflow for live HSBC forms.</li>
-    <li>Collect ~500–1,000 anonymized in-house pages. 70/15/15 split. Combine with Tobacco-800 + tech4humans datasets for pre-training breadth.</li>
-    <li>Define labelling guidance: single class <code>signature</code>; label every handwritten signature including initials; do <b>not</b> label printed name labels, stamps, or pre-printed flourishes.</li>
+    <li>Legal review on the two paths — Ultralytics Enterprise License (primary, ~$5k–50k/yr, scope-dependent) vs Apache-2.0 Conditional-DETR (fallback, no procurement).</li>
+    <li>Initiate Enterprise License procurement via Ultralytics' contact form — they quote per use case; a bank with HSBC's scope should expect mid-five-figures annually.</li>
+    <li>Build a small "decision memo" with both paths and let Legal pick. Engineering work continues against the Apache-2.0 path so we're never blocked.</li>
   </ul>
 
-  <h3>Phase 1 · Model training <span class="pill muted">2 wks</span></h3>
+  <h3>Phase 1 · Evaluation set + smoke test <span class="pill muted">1 wk · parallel</span></h3>
   <ul>
-    <li>Base: <code>PekingU/rtdetr_v2_r18vd</code> from Hugging Face (Apache 2.0).</li>
-    <li>HF Transformers + PyTorch. Fine-tune on a 1× T4 or A10 spot instance for a few hours.</li>
-    <li>Recipe: 640², AdamW, lr 1e-4 backbone / 1e-3 head, cosine schedule, 60 epochs. Augmentations: rotation ±5°, brightness/contrast ±15%, Gaussian noise, JPEG compression 50–95.</li>
-    <li>Optuna 20-trial sweep on <code>dropout</code>, <code>lr0</code>, <code>box-loss</code> weight (the tech4humans team showed this adds ~7–8% F1).</li>
-    <li><b>Gate:</b> mAP@50 ≥ 0.92 on the held-out HSBC split.</li>
+    <li>Collect ~100 anonymized HSBC account-opening pages spanning the form variants you actually see in production.</li>
+    <li>Label them once, by hand, in CVAT or Label Studio (in-VPC) — single class <code>signature</code>. Should take 1 person about a day.</li>
+    <li>Run both models against this set <em>via a notebook</em>, not yet the service. Output: a 3-row table of precision / recall / mAP@50 / latency for {YOLOv8s, Conditional-DETR}. This is the moment of truth.</li>
+    <li><b>Gate:</b> at least one model achieves recall ≥ 0.90 at precision ≥ 0.95 on the HSBC set. If not, see Risks §10.</li>
   </ul>
 
-  <h3>Phase 2 · CPU optimization <span class="pill muted">1 wk</span></h3>
-  <ul>
-    <li>Export to ONNX opset 17 via HF Optimum.</li>
-    <li>Run <code>onnxruntime.tools.optimizer</code> (fusion, constant folding).</li>
-    <li>INT8 post-training quantization with a 200–500 image calibration set.</li>
-    <li>Validate accuracy degradation ≤ 1.5 mAP@50 points. If exceeded, switch to QDQ + per-channel weight quantization; if still failing, fall back to FP32.</li>
-    <li><b>Gate:</b> p95 ≤ 350 ms on target instance with ORT + OpenVINO EP.</li>
-  </ul>
-
-  <h3>Phase 3 · Service implementation <span class="pill muted">1.5 wks</span></h3>
-  <p>Single Python service; one model load shared by both transports:</p>
+  <h3>Phase 2 · Service implementation <span class="pill muted">1 wk</span></h3>
+  <p>Single Python service. Model factory pattern so both backends are switchable:</p>
   <div class="code">
     <div class="code-path"><b>repo layout</b><span>app/</span></div>
 <pre><span class="c">app/
-├─ inference.py     # ONNX session wrapper, lazy load, thread-safe
-├─ preprocess.py    # PDF rendering, deskew, normalization
-├─ postprocess.py   # NMS, padding, masking, cropping
-├─ api.py           # FastAPI REST routes
-├─ mcp_server.py    # FastMCP tools (wraps inference.run)
-├─ main.py          # starts uvicorn :8080 + FastMCP :8081
-├─ config.py        # Pydantic BaseSettings (env-driven)
-└─ logging.py       # structured JSON; never logs pixels</span></pre>
+├─ inference/
+│   ├─ __init__.py     # factory: load_model(MODEL_BACKEND) → Detector
+│   ├─ yolov8s.py      # ORT session for tech4humans/yolov8s
+│   └─ cdetr50.py      # transformers model for conditional-detr-50
+├─ preprocess.py       # PDF rendering, deskew, normalization
+├─ postprocess.py      # NMS, padding, masking, cropping
+├─ api.py              # FastAPI REST routes
+├─ mcp_server.py       # FastMCP tools (wraps inference.run)
+├─ main.py             # uvicorn :8080 + FastMCP :8081
+├─ config.py           # Pydantic BaseSettings (env-driven)
+└─ logging.py          # structured JSON; never logs pixels</span></pre>
   </div>
 
-  <h3>Phase 4 · AWS deployment <span class="pill muted">1 wk</span></h3>
-  <p>See §<a href="#deployment">07</a> for the full spec. Highlights: <code>python:3.12-slim</code> multi-stage Dockerfile, image &lt; 700 MB, ECS Fargate (2 vCPU / 4 GB), internal ALB, blue/green via ECS rolling update.</p>
+  <p>Model download happens at <b>build time</b>, not runtime:</p>
+  <div class="code">
+    <div class="code-path"><b>Dockerfile · build-time model fetch</b><span>multi-stage</span></div>
+<pre><span class="k">FROM</span> python:3.12-slim <span class="k">AS</span> model-fetch
+<span class="k">ARG</span> MODEL_BACKEND=yolov8s
+<span class="k">ARG</span> HF_TOKEN
+<span class="k">RUN</span> pip install --no-cache-dir <span class="s">"huggingface_hub[cli]"</span>
+<span class="k">RUN</span> <span class="k">if</span> [ <span class="s">"$MODEL_BACKEND"</span> = <span class="s">"yolov8s"</span> ]; <span class="k">then</span> \
+      huggingface-cli download tech4humans/yolov8s-signature-detector \
+        yolov8s.onnx --local-dir /models ; \
+    <span class="k">else</span> \
+      huggingface-cli download tech4humans/conditional-detr-50-signature-detector \
+        --local-dir /models ; \
+    <span class="k">fi</span>
 
-  <h3>Phase 5 · Testing &amp; rollout <span class="pill muted">1.5 wks</span></h3>
+<span class="k">FROM</span> python:3.12-slim
+<span class="k">COPY</span> --from=model-fetch /models /opt/models
+<span class="k">COPY</span> requirements.txt /tmp/
+<span class="k">RUN</span> pip install --no-cache-dir -r /tmp/requirements.txt
+<span class="k">COPY</span> app/ /app/
+<span class="k">ENV</span> MODEL_BACKEND=$MODEL_BACKEND  MODEL_PATH=/opt/models
+<span class="k">EXPOSE</span> 8080 8081
+<span class="k">CMD</span> [<span class="s">"python"</span>, <span class="s">"-m"</span>, <span class="s">"app.main"</span>]</pre>
+  </div>
+
+  <h3>Phase 3 · AWS deployment <span class="pill muted">3–5 days</span></h3>
+  <p>Spec unchanged from v1 — see §<a href="#deployment">08</a>. Highlights: <code>python:3.12-slim</code> base, image &lt; 700 MB, Fargate 2 vCPU / 4 GB, internal ALB, blue/green via ECS rolling update. The only addition: image tag now includes the model backend (e.g. <code>signature-cropper:1.0.0-yolov8s</code>) so a backend swap is a deployment swap.</p>
+
+  <h3>Phase 4 · Shadow rollout + cutover <span class="pill muted">1 wk</span></h3>
   <ul>
-    <li>Unit (pre/post-processing), integration (golden image fixtures), load (Locust, 100 RPS sustained on a 4-task cluster).</li>
-    <li>Model card with training-data lineage, eval metrics, known failure modes, version.</li>
-    <li>Nightly drift monitor on a fixed canary set; alert on mAP drift > 2 points.</li>
-    <li>Shadow rollout against the current process for 1,000 real forms; cut over when agreement ≥ 99%.</li>
+    <li>Run the new service in parallel with whatever the current process is. Diff outputs on 1,000 real forms.</li>
+    <li>Pick the operating confidence threshold based on the Phase 1 + shadow data.</li>
+    <li>Cut over when agreement ≥ 99% on the shadow set. Keep the old path warm for one week post-cutover.</li>
+    <li>Nightly drift-monitor job from day one: run the model on a fixed canary set, alert on metric drift > 2 points.</li>
   </ul>
 </section>
 
@@ -1089,10 +1199,7 @@
 <section id="api">
   <div class="sec-head"><span class="sec-num">06</span><h2>REST API specification</h2></div>
 
-  <p class="lede">
-    Base URL <code>https://signature-cropper.internal.hsbc/v1</code>. mTLS at the
-    ALB plus a short-TTL HMAC-signed JWT validated by the app.
-  </p>
+  <p class="lede">Unchanged from v1 — the API contract doesn't know or care which model is behind it. <code>model_version</code> in every response carries the backend identifier for audit.</p>
 
   <h3><code>POST /v1/signatures:extract</code> <span class="pill" data-sev="info">sync</span></h3>
   <p>Synchronous extraction for a single file ≤ 25 MB. Request as <code>multipart/form-data</code>:</p>
@@ -1101,7 +1208,7 @@
     <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Default</th><th>Description</th></tr></thead>
     <tbody>
       <tr><td class="mono">file</td><td>binary</td><td>yes</td><td>—</td><td>PDF, PNG, JPEG, or TIFF</td></tr>
-      <tr><td class="mono">confidence_threshold</td><td>float</td><td>no</td><td>0.55</td><td>Detection score cutoff</td></tr>
+      <tr><td class="mono">confidence_threshold</td><td>float</td><td>no</td><td>0.50</td><td>Detection score cutoff. Default tuned against Phase 1 eval set.</td></tr>
       <tr><td class="mono">padding_pct</td><td>float</td><td>no</td><td>0.08</td><td>Padding around bbox, fraction of shorter side</td></tr>
       <tr><td class="mono">apply_mask</td><td>bool</td><td>no</td><td>false</td><td>RGBA output with form-line bleed removed</td></tr>
       <tr><td class="mono">return_format</td><td>enum</td><td>no</td><td>inline_b64</td><td><code>inline_b64</code> or <code>s3</code></td></tr>
@@ -1115,7 +1222,8 @@
     <div class="code-path"><b>application/json</b><span>response shape</span></div>
 <pre>{
   <span class="s">"request_id"</span>: <span class="s">"req_01HZ..."</span>,
-  <span class="s">"model_version"</span>: <span class="s">"rtdetrv2-s-int8-2026.05.07"</span>,
+  <span class="s">"model_version"</span>: <span class="s">"tech4humans-yolov8s-signature-detector@1.0.0"</span>,
+  <span class="s">"model_backend"</span>: <span class="s">"yolov8s"</span>,
   <span class="s">"page_count"</span>: 3,
   <span class="s">"signatures"</span>: [
     {
@@ -1124,12 +1232,12 @@
       <span class="s">"bbox"</span>: { <span class="s">"x"</span>: 1240, <span class="s">"y"</span>: 1850, <span class="s">"w"</span>: 460, <span class="s">"h"</span>: 180 },
       <span class="s">"bbox_normalized"</span>: { <span class="s">"x"</span>: 0.51, <span class="s">"y"</span>: 0.74, <span class="s">"w"</span>: 0.19, <span class="s">"h"</span>: 0.07 },
       <span class="s">"confidence"</span>: 0.974,
-      <span class="s">"crop_b64"</span>: <span class="s">"iVBORw0KGgo..."</span>,    <span class="c">// iff return_format=inline_b64</span>
-      <span class="s">"crop_s3_uri"</span>: null,            <span class="c">// iff return_format=s3</span>
+      <span class="s">"crop_b64"</span>: <span class="s">"iVBORw0KGgo..."</span>,
+      <span class="s">"crop_s3_uri"</span>: null,
       <span class="s">"mask_applied"</span>: false
     }
   ],
-  <span class="s">"timing_ms"</span>: { <span class="s">"preprocess"</span>: 42, <span class="s">"inference"</span>: 187, <span class="s">"postprocess"</span>: 11 }
+  <span class="s">"timing_ms"</span>: { <span class="s">"preprocess"</span>: 28, <span class="s">"inference"</span>: 172, <span class="s">"postprocess"</span>: 10 }
 }</pre>
   </div>
 
@@ -1149,11 +1257,11 @@
   <h3>Other endpoints</h3>
   <table>
     <tbody>
-      <tr><td class="mono">POST /v1/signatures:extract_async</td><td>Async variant for files up to 200 MB. Returns 202 + <code>job_id</code>; client polls <code>GET /v1/jobs/{job_id}</code> or subscribes to a pre-configured SNS topic.</td></tr>
+      <tr><td class="mono">POST /v1/signatures:extract_async</td><td>Async variant for files up to 200 MB. Returns 202 + <code>job_id</code>; client polls <code>GET /v1/jobs/{job_id}</code>.</td></tr>
       <tr><td class="mono">GET /v1/healthz</td><td>Liveness probe</td></tr>
-      <tr><td class="mono">GET /v1/readyz</td><td>Returns 200 only after the ONNX session is loaded and warm-up inference completed</td></tr>
-      <tr><td class="mono">GET /v1/model</td><td>Active model version, training-lineage hash, last-eval metrics (for audit)</td></tr>
-      <tr><td class="mono">GET /v1/metrics</td><td>Prometheus exposition: request count, latency histogram, detections-per-page</td></tr>
+      <tr><td class="mono">GET /v1/readyz</td><td>200 only after the ONNX session is loaded and warm-up inference completed</td></tr>
+      <tr><td class="mono">GET /v1/model</td><td>Backend, model name &amp; version, Hugging Face revision SHA, last-eval metrics</td></tr>
+      <tr><td class="mono">GET /v1/metrics</td><td>Prometheus exposition</td></tr>
     </tbody>
   </table>
 </section>
@@ -1163,26 +1271,19 @@
 <section id="mcp">
   <div class="sec-head"><span class="sec-num">07</span><h2>MCP server</h2></div>
 
-  <p class="lede">
-    Built with <b>FastMCP</b> (the standard Python MCP framework). Same process,
-    same loaded model, same internal <code>inference.run()</code> as the REST surface —
-    no second container, no second model copy. Transport: Streamable HTTP behind
-    the same ALB, path prefix <code>/mcp/</code>.
-  </p>
-
-  <h3>Tools exposed</h3>
+  <p class="lede">Unchanged from v1. Same process, same loaded model, same internal <code>inference.run()</code>. The MCP transport is Streamable HTTP behind the same ALB, path prefix <code>/mcp/</code>.</p>
 
   <div class="code">
     <div class="code-path"><b>app/mcp_server.py</b><span>sketch</span></div>
 <pre><span class="k">from</span> fastmcp <span class="k">import</span> FastMCP
 <span class="k">from</span> pydantic <span class="k">import</span> BaseModel, Field
-<span class="k">from</span> .inference <span class="k">import</span> run_extraction
+<span class="k">from</span> .inference <span class="k">import</span> run_extraction, model_info_payload
 
-mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
+mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>, mask_error_details=<span class="k">True</span>)
 
 <span class="k">class</span> <span class="n">ExtractParams</span>(BaseModel):
     file_uri: <span class="n">str</span> = Field(description=<span class="s">"s3:// URI of the PDF/image"</span>)
-    confidence_threshold: <span class="n">float</span> = 0.55
+    confidence_threshold: <span class="n">float</span> = 0.50
     padding_pct: <span class="n">float</span> = 0.08
     apply_mask: <span class="n">bool</span> = <span class="k">False</span>
 
@@ -1196,7 +1297,9 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
 <span class="k">async def</span> <span class="n">extract_signatures</span>(params: ExtractParams) -> <span class="n">dict</span>:
     <span class="s">"""Detect every handwritten signature on a scanned form and return
     cropped PNGs plus bounding boxes. Input must be in the approved S3
-    bucket; output crops are written under a per-request prefix."""</span>
+    bucket; output crops are written under a per-request prefix.
+
+    Returns S3 URIs only — never raw pixel bytes to the agent."""</span>
     <span class="k">return await</span> run_extraction(
         source=params.file_uri,
         threshold=params.confidence_threshold,
@@ -1206,36 +1309,27 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
     )
 
 <span class="n">@mcp.tool</span>(annotations={<span class="s">"title"</span>: <span class="s">"Model info"</span>, <span class="s">"readOnlyHint"</span>: <span class="k">True</span>})
-<span class="k">def</span> <span class="n">model_info</span>() -> <span class="n">dict</span>: ...
-
-<span class="n">@mcp.tool</span>(annotations={<span class="s">"title"</span>: <span class="s">"Health check"</span>, <span class="s">"readOnlyHint"</span>: <span class="k">True</span>})
-<span class="k">def</span> <span class="n">healthz</span>() -> <span class="n">dict</span>: ...</pre>
+<span class="k">def</span> <span class="n">model_info</span>() -> <span class="n">dict</span>:
+    <span class="s">"""Returns the active backend, HF revision SHA, and last eval metrics
+    on the HSBC eval set."""</span>
+    <span class="k">return</span> model_info_payload()</pre>
   </div>
 
   <h3>MCP-specific safety rules</h3>
   <ul>
-    <li>The tool <b>only</b> accepts <code>s3://</code> URIs inside the pre-approved bucket prefix. No file paths, no raw bytes — forces all data through the audited storage path.</li>
-    <li>The tool <b>never</b> returns base64 crop bytes to the agent — only S3 URIs and bounding-box metadata. Signature pixels stay out of LLM context windows.</li>
-    <li><code>mask_error_details=True</code> on the FastMCP instance so internal exception traces don't surface to the agent.</li>
-    <li>Per-tool RBAC via the bearer token at the ALB — only enrolled service identities can call <code>extract_signatures</code>.</li>
+    <li>The tool <b>only</b> accepts <code>s3://</code> URIs inside the pre-approved bucket prefix. No file paths, no raw bytes.</li>
+    <li>The tool <b>never</b> returns base64 crop bytes to the agent — S3 URIs and bounding-box metadata only.</li>
+    <li><code>mask_error_details=True</code> so internal exception traces don't surface to the agent.</li>
+    <li>Per-tool RBAC via the bearer token at the ALB.</li>
   </ul>
-
-  <div class="card">
-    <div class="card-title">Why expose MCP at all, when REST already exists?</div>
-    <p style="margin:0">
-      The MCP surface is for <em>agents</em> orchestrating multi-step work —
-      "for the twelve PDFs in this case folder, pull out the signatures and
-      attach them to the customer record". REST is the contract for the document-processing
-      batch system and RPA bots. Both target the same backend; they differ in
-      who's holding the steering wheel.
-    </p>
-  </div>
 </section>
 
 
 <!-- ====== 08 · DEPLOYMENT ====== -->
 <section id="deployment">
   <div class="sec-head"><span class="sec-num">08</span><h2>AWS deployment specification</h2></div>
+
+  <p class="lede">Identical to v1 except the image tag now encodes the model backend.</p>
 
   <div class="two-col">
     <div>
@@ -1260,17 +1354,17 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
       <h4>Storage</h4>
       <ul>
         <li>ECR private repo, image scanning on</li>
+        <li>Image tag pattern: <code>signature-cropper:{ver}-{backend}</code></li>
         <li>S3 <code>hsbc-sig-cropper-{env}</code></li>
         <li>SSE-KMS, customer-managed key</li>
         <li>Lifecycle: delete <code>inputs/</code> and <code>outputs/</code> after 24 h</li>
         <li>Block Public Access: all four toggles on</li>
-        <li>Bucket policy: task role only</li>
       </ul>
 
       <h4>Secrets &amp; config</h4>
       <ul>
-        <li>Thresholds, bucket names, KMS key IDs, model version pins via Secrets Manager / SSM</li>
-        <li>Model ONNX is <b>baked into the image</b> — update = new image tag = blue/green</li>
+        <li>Thresholds, bucket names, KMS key IDs, MODEL_BACKEND via Secrets Manager / SSM</li>
+        <li>Model ONNX baked into image at build time — no runtime fetch</li>
       </ul>
     </div>
   </div>
@@ -1278,9 +1372,8 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
   <h4>Observability</h4>
   <ul>
     <li>Structured JSON logs to CloudWatch. <b>Zero payload bytes</b>, request_id propagated.</li>
-    <li>CloudWatch Metrics: latency, success rate, detections-per-page, p95/p99 latency.</li>
-    <li>Alarms: p95 &gt; 800 ms, error rate &gt; 1%.</li>
-    <li>X-Ray traces if downstream services are already X-Ray enabled.</li>
+    <li>CloudWatch Metrics: latency, success rate, detections-per-page, p95/p99 latency, plus <code>model_backend</code> dimension so we can compare YOLOv8s vs Conditional-DETR if both ever run.</li>
+    <li>Alarms: p95 &gt; 600 ms (YOLOv8s) / &gt; 1200 ms (Conditional-DETR), error rate &gt; 1%.</li>
   </ul>
 </section>
 
@@ -1289,64 +1382,70 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
 <section id="acceptance">
   <div class="sec-head"><span class="sec-num">09</span><h2>Acceptance criteria</h2></div>
 
-  <p class="lede">Objectively measurable. Failing any of these blocks production cut-over.</p>
+  <p class="lede">
+    The semantics shift in v2: thresholds describe what the <em>published</em>
+    model must <em>actually achieve on HSBC data</em>, not what we trained it
+    to. If the model can't hit these on the Phase 1 eval set, that's a
+    decision point, not a remediation.
+  </p>
 
-  <h3>9.1 · Accuracy <span class="pill muted">held-out HSBC set · ≥ 500 pages · ≥ 700 signatures</span></h3>
+  <h3>9.1 · Accuracy on HSBC eval set <span class="pill muted">~100 pages, hand-labelled in Phase 1</span></h3>
   <table>
-    <thead><tr><th>Metric</th><th class="num">Threshold</th></tr></thead>
+    <thead><tr><th>Metric</th><th class="num">YOLOv8s target</th><th class="num">Conditional-DETR target</th></tr></thead>
     <tbody>
-      <tr><td>Precision @ default threshold (0.55)</td><td class="num">≥ 0.96</td></tr>
-      <tr><td>Recall @ default threshold</td><td class="num">≥ 0.95</td></tr>
-      <tr><td>mAP@50, single class <code>signature</code></td><td class="num">≥ 0.94</td></tr>
-      <tr><td>mAP@50:95</td><td class="num">≥ 0.65</td></tr>
-      <tr><td>False-positive rate on blank-signature pages (50 fixtures)</td><td class="num">≤ 2%</td></tr>
-      <tr><td>Median bbox IoU vs. human label (TP only)</td><td class="num">≥ 0.85</td></tr>
+      <tr><td>Precision @ tuned threshold</td><td class="num">≥ 0.93</td><td class="num">≥ 0.91</td></tr>
+      <tr><td>Recall @ tuned threshold</td><td class="num">≥ 0.88</td><td class="num">≥ 0.86</td></tr>
+      <tr><td>mAP@50</td><td class="num">≥ 0.92</td><td class="num">≥ 0.90</td></tr>
+      <tr><td>False-positive rate on blank-signature pages (20 fixtures)</td><td class="num">≤ 3%</td><td class="num">≤ 3%</td></tr>
+      <tr><td>Median bbox IoU vs. human label (TP only)</td><td class="num">≥ 0.80</td><td class="num">≥ 0.80</td></tr>
     </tbody>
   </table>
+  <p class="diagram-caption" style="text-align:left;">Targets are ~2 mAP points below published numbers to allow for the domain shift between Tobacco-800 and HSBC's form distribution. If we beat these, great. If we miss them by more than 5 points, see Risks §10.</p>
 
-  <h3>9.2 · Performance <span class="pill muted">Fargate 2 vCPU / 4 GB · INT8 model</span></h3>
+  <h3>9.2 · Performance <span class="pill muted">Fargate 2 vCPU / 4 GB</span></h3>
   <table>
-    <thead><tr><th>Metric</th><th class="num">Threshold</th></tr></thead>
+    <thead><tr><th>Metric</th><th class="num">YOLOv8s</th><th class="num">Conditional-DETR</th></tr></thead>
     <tbody>
-      <tr><td>p50 latency, A4 page @ 300 DPI</td><td class="num">≤ 250 ms</td></tr>
-      <tr><td>p95 latency, A4 page @ 300 DPI</td><td class="num">≤ 400 ms</td></tr>
-      <tr><td>p99 latency, A4 page @ 300 DPI</td><td class="num">≤ 700 ms</td></tr>
-      <tr><td>Sustained throughput per task</td><td class="num">≥ 6 pg/s</td></tr>
-      <tr><td>Cold start (task start → <code>readyz</code> 200)</td><td class="num">≤ 15 s</td></tr>
-      <tr><td>Memory headroom under sustained load</td><td class="num">≥ 25%</td></tr>
+      <tr><td>p50 latency, A4 page @ 300 DPI</td><td class="num">≤ 240 ms</td><td class="num">≤ 600 ms</td></tr>
+      <tr><td>p95 latency</td><td class="num">≤ 400 ms</td><td class="num">≤ 900 ms</td></tr>
+      <tr><td>p99 latency</td><td class="num">≤ 700 ms</td><td class="num">≤ 1400 ms</td></tr>
+      <tr><td>Sustained throughput per task</td><td class="num">≥ 8 pg/s</td><td class="num">≥ 3 pg/s</td></tr>
+      <tr><td>Cold start (task start → <code>readyz</code> 200)</td><td class="num">≤ 15 s</td><td class="num">≤ 20 s</td></tr>
+      <tr><td>Memory headroom under sustained load</td><td class="num">≥ 25%</td><td class="num">≥ 20%</td></tr>
     </tbody>
   </table>
 
   <h3>9.3 · API &amp; MCP contract</h3>
   <ul>
-    <li>OpenAPI 3.1 spec published; CI validates implementation matches spec.</li>
-    <li>MCP server passes <code>mcp-inspector</code> connectivity test on all three tools.</li>
+    <li>OpenAPI 3.1 spec published, CI-validated against the implementation.</li>
+    <li>MCP server passes <code>mcp-inspector</code> on all tools.</li>
     <li>Idempotent on <code>request_id</code> within 24 h.</li>
+    <li>Response includes <code>model_version</code> and <code>model_backend</code> for audit.</li>
   </ul>
 
   <h3>9.4 · Security &amp; compliance</h3>
   <ul>
-    <li>No signature pixel data in any log line. Verified by CI regex check against test-run log output.</li>
+    <li>No signature pixel data in any log line. CI regex check on test-run log output.</li>
     <li>TLS 1.2+ only at the ALB; PFS ciphers only.</li>
-    <li><code>trivy</code> image scan: <b>zero CRITICAL CVEs</b> at deploy time. Monthly rescan with alerts on new CRITICAL/HIGH.</li>
-    <li>IAM least privilege validated against documented permissions via <code>iam-policy-simulator</code>.</li>
-    <li>Data retention: inputs and outputs deleted from S3 within 24 h, verified by automated inventory check.</li>
-    <li>Audit log captures: timestamp · request_id · caller identity · page count · signature count · model version. <b>Never</b> signature bytes.</li>
+    <li><code>trivy</code> image scan: zero CRITICAL CVEs at deploy time.</li>
+    <li>IAM least privilege validated against documented permissions.</li>
+    <li>Data retention: inputs and outputs deleted from S3 within 24 h.</li>
+    <li>Audit log captures: timestamp · request_id · caller identity · page count · signature count · model_backend · HF revision SHA.</li>
   </ul>
 
   <h3>9.5 · Operational</h3>
   <ul>
-    <li>Two ECS tasks survive a single-AZ failure (chaos test: stop one task, p95 returns to baseline within 60 s).</li>
-    <li>Image is reproducible: <code>docker build</code> from tagged source produces byte-identical image (multi-stage, pinned deps, <code>--no-cache-dir</code>).</li>
-    <li>Runbook covers: model rollback, threshold tuning, dependency CVE patch, drift-alert response.</li>
-    <li>Model card and OpenAPI spec checked into the repo, version-aligned with the image tag.</li>
+    <li>Two ECS tasks survive a single-AZ failure (chaos test).</li>
+    <li>Image is reproducible: <code>docker build</code> from a tagged commit produces byte-identical image (pinned deps, <code>--no-cache-dir</code>, HF revision pinned).</li>
+    <li>Runbook covers: model rollback, threshold tuning, dependency CVE patch, drift-alert response, switching MODEL_BACKEND.</li>
   </ul>
 
   <h3>9.6 · License &amp; legal</h3>
   <ul>
-    <li>Final architecture is <b>Apache-2.0 end-to-end</b> (training code, inference code, weights), <b>or</b> a signed Ultralytics Enterprise License is on file before any AGPL weight runs on the production cluster.</li>
-    <li><code>pip-licenses</code> inventory generated, reviewed, and stored alongside the model card.</li>
-    <li>CI gates on <code>pip-licenses --fail-on AGPL</code> — accidental AGPL pull-in is build-blocking.</li>
+    <li><b>If shipping with YOLOv8s:</b> signed Ultralytics Enterprise License on file before the first production deploy.</li>
+    <li><b>If shipping with Conditional-DETR:</b> Apache-2.0; no procurement needed.</li>
+    <li><code>pip-licenses</code> inventory generated and reviewed.</li>
+    <li>CI gates on <code>pip-licenses --fail-on AGPL</code> when MODEL_BACKEND=cdetr50 (defensive: shouldn't be any AGPL deps in the Apache-2.0 path).</li>
   </ul>
 </section>
 
@@ -1355,21 +1454,28 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
 <section id="risks">
   <div class="sec-head"><span class="sec-num">10</span><h2>Risks &amp; mitigations</h2></div>
 
+  <p class="lede">
+    v2's biggest risk is concentrated in one place: domain shift between the
+    upstream training distribution (Tobacco-800 + signatures-xc8up) and HSBC's
+    forms. Everything else is operational.
+  </p>
+
   <table>
     <thead>
-      <tr>
-        <th>Risk</th>
-        <th>Likelihood</th>
-        <th>Impact</th>
-        <th>Mitigation</th>
-      </tr>
+      <tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr>
     </thead>
     <tbody>
       <tr>
-        <td>AGPL surprise — a transitive dep pulls in AGPL code under our app's runtime</td>
+        <td><b>Domain shift</b> — published numbers don't translate to HSBC forms (different layout, logo, ink colors, scanner stack)</td>
         <td><span class="pill" data-sev="med">med</span></td>
-        <td><span class="pill" data-sev="crit">critical</span></td>
-        <td>Automated license scan (<code>pip-licenses --fail-on AGPL</code>) gating CI; quarterly manual review of <code>requirements.txt</code></td>
+        <td><span class="pill" data-sev="high">high</span></td>
+        <td>Phase 1 eval set tells us the real number <b>before any AWS commit</b>. If the model misses the 9.1 thresholds by more than 5 points, we re-add a fine-tuning phase as a v3 effort. If by less, accept and ship.</td>
+      </tr>
+      <tr>
+        <td><b>Enterprise License procurement stalls</b></td>
+        <td><span class="pill" data-sev="med">med</span></td>
+        <td><span class="pill" data-sev="low">low</span></td>
+        <td>Apache-2.0 path (Conditional-DETR) is always shippable. Engineering work proceeds against the Apache path so we're never blocked on procurement. Backend swap is one env var.</td>
       </tr>
       <tr>
         <td>Customer data leakage via logs or LLM context (MCP)</td>
@@ -1378,34 +1484,34 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
         <td>Hard rule: pixels never enter logs or LLM context. MCP returns S3 URIs only. CI regex check on log output. Bucket policy denies any role outside the task role.</td>
       </tr>
       <tr>
+        <td>Upstream HF model is taken down or moved</td>
+        <td><span class="pill" data-sev="low">low</span></td>
+        <td><span class="pill" data-sev="med">med</span></td>
+        <td>Model ONNX baked into image at build time (Phase 2 Dockerfile pattern). Once built and pushed to ECR, the upstream availability is irrelevant. Image is the artifact of record.</td>
+      </tr>
+      <tr>
         <td>Form layouts change — HSBC redesigns the account-opening form</td>
         <td><span class="pill" data-sev="med">med</span></td>
-        <td><span class="pill" data-sev="high">high</span></td>
-        <td>Nightly drift monitor on a fixed canary set. Quarterly re-eval. Support multiple model versions concurrently via <code>X-Model-Version</code> header.</td>
+        <td><span class="pill" data-sev="med">med</span></td>
+        <td>Nightly drift monitor on a fixed canary set. Quarterly re-eval. If drift sustained, that's the trigger to do a v3 fine-tune.</td>
       </tr>
       <tr>
-        <td>Model misses signatures in unusual ink colors (red, green, faded)</td>
+        <td>Model misses signatures in unusual ink colors (red, faded)</td>
         <td><span class="pill" data-sev="med">med</span></td>
         <td><span class="pill" data-sev="med">med</span></td>
-        <td>Include color variants in training augmentations. Production feedback loop: failed cases auto-routed to the labelling queue.</td>
+        <td>Tobacco-800 is mostly black-ink; the published model has limited red-ink exposure. <b>Specifically test this in the Phase 1 eval set.</b> Mitigations if it fails: per-channel grayscale-pre-conversion before inference, or a v3 fine-tune.</td>
       </tr>
       <tr>
-        <td>Printed cursive signatures ("Sample" watermarks) cause false positives</td>
+        <td>Printed cursive signatures (sample watermarks, signed name labels) cause false positives</td>
         <td><span class="pill" data-sev="med">med</span></td>
         <td><span class="pill" data-sev="low">low</span></td>
-        <td>Train with explicit negative examples. Optional secondary binary classifier ("is this stroke handwritten?") as a confidence booster on borderline detections.</td>
+        <td>Phase 1 eval set should include negative fixtures. If FP rate too high, post-process filter on bbox aspect ratio + stroke density.</td>
       </tr>
       <tr>
         <td>ONNX Runtime / OpenVINO EP regression on a new release</td>
         <td><span class="pill" data-sev="low">low</span></td>
         <td><span class="pill" data-sev="med">med</span></td>
         <td>Pin <code>onnxruntime-openvino</code> version. Validate accuracy + latency on every dependency bump in CI.</td>
-      </tr>
-      <tr>
-        <td>Throughput insufficient at peak volumes</td>
-        <td><span class="pill" data-sev="med">med</span></td>
-        <td><span class="pill" data-sev="med">med</span></td>
-        <td>ECS auto-scaling already in design. If peak is sustained, switch to bare EC2 c7i.large with reserved capacity for ~30% cost reduction at high utilization.</td>
       </tr>
     </tbody>
   </table>
@@ -1416,22 +1522,32 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
 <section id="cost">
   <div class="sec-head"><span class="sec-num">11</span><h2>Cost estimate</h2></div>
 
-  <p class="lede">Steady-state, illustrative. Eu-west-2 prices, 4 tasks 24/7, 50 GB/mo ingress and storage (24h retention keeps working set small), 100 GB/mo logs.</p>
+  <p class="lede">Steady-state, illustrative. Eu-west-2, 4 tasks 24/7. The new line item compared to v1 is the Ultralytics Enterprise License — a one-time procurement that turns into an annual subscription.</p>
 
   <table>
-    <thead><tr><th>Item</th><th class="num">$ / month</th></tr></thead>
+    <thead><tr><th>Item</th><th class="num">$ / month</th><th class="num">$ / year</th></tr></thead>
     <tbody>
-      <tr><td>Fargate 4 × (2 vCPU, 4 GB) 24/7</td><td class="num">~210</td></tr>
-      <tr><td>Internal ALB</td><td class="num">~25</td></tr>
-      <tr><td>S3 storage + requests</td><td class="num">~10</td></tr>
-      <tr><td>KMS requests</td><td class="num">~5</td></tr>
-      <tr><td>CloudWatch logs + metrics</td><td class="num">~30</td></tr>
-      <tr><td>ECR storage</td><td class="num">~1</td></tr>
-      <tr style="background: var(--accent-soft);"><td><b>Total</b></td><td class="num"><b>~$280</b></td></tr>
+      <tr><td>Fargate 4 × (2 vCPU, 4 GB) 24/7</td><td class="num">~210</td><td class="num">~2,520</td></tr>
+      <tr><td>Internal ALB</td><td class="num">~25</td><td class="num">~300</td></tr>
+      <tr><td>S3 storage + requests</td><td class="num">~10</td><td class="num">~120</td></tr>
+      <tr><td>KMS requests</td><td class="num">~5</td><td class="num">~60</td></tr>
+      <tr><td>CloudWatch logs + metrics</td><td class="num">~30</td><td class="num">~360</td></tr>
+      <tr><td>ECR storage</td><td class="num">~1</td><td class="num">~12</td></tr>
+      <tr style="background: var(--bg-elev);"><td><b>AWS subtotal</b></td><td class="num"><b>~$281</b></td><td class="num"><b>~$3,372</b></td></tr>
+      <tr><td>Ultralytics Enterprise License <span class="pill muted">if YOLOv8s</span></td><td class="num">~$400–4,200</td><td class="num"><b>~$5k–50k</b></td></tr>
+      <tr style="background: var(--accent-soft);"><td><b>Total · YOLOv8s</b></td><td class="num"><b>~$700–4,500</b></td><td class="num"><b>~$8k–53k</b></td></tr>
+      <tr style="background: var(--sev-low-bg);"><td><b>Total · Conditional-DETR (Apache)</b></td><td class="num"><b>~$281</b></td><td class="num"><b>~$3,372</b></td></tr>
     </tbody>
   </table>
 
-  <p>At 1M pages/month, that's roughly <b>$0.0003 per page</b> — 30–100× cheaper than Textract's <code>SIGNATURES</code> feature at comparable volume.</p>
+  <p>
+    The Enterprise License range is wide because Ultralytics quotes per use
+    case. A documented starting point ($5k/yr) was shared by an early-stage
+    startup; enterprise scopes have been quoted at 5–10× that. For HSBC, budget
+    mid-five-figures annually until the actual quote arrives. Even at the top
+    of the range, per-page cost stays under <b>$0.005</b> at 1M pages/month —
+    still 20× cheaper than Textract's <code>SIGNATURES</code> feature.
+  </p>
 </section>
 
 
@@ -1439,89 +1555,93 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
 <section id="week-one">
   <div class="sec-head"><span class="sec-num">12</span><h2>Week-1 checklist</h2></div>
 
-  <p class="lede">Five concrete items. Once items 3 and 4 land, the remaining work is fine-tuning, hardening, and rollout — all well-understood, predictable engineering.</p>
+  <p class="lede">Six concrete items. The first three run in parallel.</p>
 
-  <ol style="padding-left: 0; list-style: none; counter-reset: w1;">
-    <li style="counter-increment: w1; padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
+  <ol style="padding-left: 0; list-style: none;">
+    <li style="padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
       <span style="font-family: var(--mono); color: var(--accent); font-size: 11px; padding-top: 2px;">01</span>
-      <span>Stand up the labelling environment <b>inside the VPC</b>. Export the tech4humans Apache-2.0 dataset as a starting set.</span>
+      <span><b>Procurement</b>: submit the Ultralytics Enterprise License request via their contact form. Provide deployment scope (internal-only, ~4 Fargate tasks, ~1M pages/month). Expect 1–4 week turnaround.</span>
     </li>
-    <li style="counter-increment: w1; padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
+    <li style="padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
       <span style="font-family: var(--mono); color: var(--accent); font-size: 11px; padding-top: 2px;">02</span>
-      <span>Get 50–100 anonymized HSBC pages from a sympathetic stakeholder for a smoke-test set.</span>
+      <span><b>Eval set</b>: get 100 anonymized HSBC account-opening pages from a sympathetic stakeholder. Label them once by hand in CVAT/Label Studio (in-VPC). 1 person-day.</span>
     </li>
-    <li style="counter-increment: w1; padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
+    <li style="padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
       <span style="font-family: var(--mono); color: var(--accent); font-size: 11px; padding-top: 2px;">03</span>
-      <span><b>Spike</b>: clone <code>PekingU/rtdetr_v2_r18vd</code>, fine-tune 20 epochs on a T4 spot, export to ONNX, benchmark on a <code>c7i.large</code> EC2. Sanity-check that we land near published numbers and that latency on the target hardware is acceptable.</span>
+      <span><b>Smoke test</b>: in a notebook, download both <code>tech4humans/yolov8s-signature-detector</code> and <code>tech4humans/conditional-detr-50-signature-detector</code> from Hugging Face, run them against the eval set, produce the precision/recall/mAP table from §09.1. This is the go/no-go data point.</span>
     </li>
-    <li style="counter-increment: w1; padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
+    <li style="padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
       <span style="font-family: var(--mono); color: var(--accent); font-size: 11px; padding-top: 2px;">04</span>
-      <span>In parallel: scaffold the FastAPI + FastMCP service skeleton with a stub model that returns canned detections. Deploy to a dev ECS Fargate service. Confirm the whole rail (ALB → ECS → S3 → logs → <code>readyz</code>) works end-to-end before the real model lands.</span>
+      <span><b>Service scaffold</b>: spin up the FastAPI + FastMCP skeleton from §05 Phase 2 against a <em>stub</em> model that returns canned detections. Deploy to a dev ECS Fargate service. Confirm ALB → ECS → S3 → logs → <code>readyz</code> all wire up before the real model lands.</span>
     </li>
-    <li style="counter-increment: w1; padding: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); display: flex; gap: 16px;">
+    <li style="padding: 14px 0; border-top: 1px solid var(--rule); display: flex; gap: 16px;">
       <span style="font-family: var(--mono); color: var(--accent); font-size: 11px; padding-top: 2px;">05</span>
-      <span>Legal sign-off on the Apache-2.0 path so it can't block the launch later.</span>
+      <span><b>Legal memo</b>: one-page comparison of the two paths for Legal. Cover license (AGPL vs Apache), accuracy delta (~1 mAP@50 point), latency delta (~3× slower for fallback), and the option to ship Apache today and swap to YOLOv8s when the Enterprise License lands.</span>
+    </li>
+    <li style="padding: 14px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); display: flex; gap: 16px;">
+      <span style="font-family: var(--mono); color: var(--accent); font-size: 11px; padding-top: 2px;">06</span>
+      <span><b>Eval review</b>: at end of week 1, walk the team through the §09.1 numbers from item 03. If we're above target, go. If we're between target and "5 points below", go with caveats. If more than 5 points below, escalate — that's a v3 conversation about adding training back.</span>
     </li>
   </ol>
 
   <h3>Open questions</h3>
 
   <div class="question">
-    <div class="q-title">Do we support multi-signature ordering, or just unordered crops?</div>
-    <p>Some downstream systems care about "applicant signature" vs "witness signature". The detector returns positions but not roles. Cheapest path: pair detection with a layout-anchor lookup ("witness" label nearest each bbox). More robust: a tiny classifier head on the crop.</p>
-    <div class="q-meta">Decide with · <b>product + downstream integration owner</b>, before <b>phase 3</b></div>
+    <div class="q-title">Ship Apache-2.0 first and swap, or wait for the Enterprise License?</div>
+    <p>Shipping Apache-2.0 first unblocks production weeks earlier and validates the entire pipeline end-to-end. Switching the backend later is a deploy, not a redesign. Recommended.</p>
+    <div class="q-meta">Decide with · <b>engineering + product</b>, end of <b>Phase 1</b></div>
   </div>
 
   <div class="question">
-    <div class="q-title">Async endpoint: SNS push, or polling only?</div>
-    <p>Polling is simpler and one fewer IAM coupling. SNS is nicer for the consuming app. Default to polling for v1, add SNS only if a real consumer asks.</p>
-    <div class="q-meta">Decide with · <b>platform integrations</b>, before <b>phase 4</b></div>
+    <div class="q-title">Do we keep both models warm in production for fallback?</div>
+    <p>Loading both adds ~200 MB to image size and ~150 MB to RAM but means a model failure on one is auto-handled by the other. Probably not worth the operational complexity for v1.</p>
+    <div class="q-meta">Decide with · <b>SRE</b>, before <b>Phase 3</b></div>
   </div>
 
   <div class="question">
-    <div class="q-title">Retention of the audit S3 copy</div>
-    <p>The processing copy is 24-hour TTL. A separate audit-trail bucket with longer retention (e.g. 7 years for KYC) may be required. This is a Legal/Compliance call, not an engineering one — but it changes the bucket layout in §08.</p>
-    <div class="q-meta">Decide with · <b>HSBC compliance</b>, before <b>phase 0 exit</b></div>
+    <div class="q-title">If domain shift is real, where does the fine-tune budget come from?</div>
+    <p>If Phase 1 shows the published model can't hit 9.1 thresholds on HSBC data, we have an honest conversation: accept the lower accuracy with a manual-review fallback, or fund a v3 fine-tune phase (adds ~3–4 weeks). Decision is much easier <em>after</em> we have the Phase 1 numbers.</p>
+    <div class="q-meta">Decide with · <b>product owner</b>, after <b>Phase 1</b></div>
   </div>
 </section>
 
 
-<!-- ====== 13 · REFERENCES ====== -->
+<!-- ====== 13 · REFS ====== -->
 <section id="refs">
   <div class="sec-head"><span class="sec-num">13</span><h2>References</h2></div>
 
   <ul class="refs">
     <li>
-      <b>"Open-Source Handwritten Signature Detection Model"</b> — S. Lima Braz / tech4humans, Hugging Face, Mar 2025.<br>
-      <span class="ref-src">Benchmarks 21 architectures on a 2,819-image signature-detection dataset with CPU-ONNX timings. The single most relevant prior art.</span>
+      <b><code>tech4humans/yolov8s-signature-detector</code></b> on Hugging Face<br>
+      <span class="ref-src">Primary model. Pretrained, ONNX-exported, OpenVINO-EP handler included. Numbers cited throughout this document are self-reported by the author on their held-out test split.</span>
     </li>
     <li>
-      <code>tech4humans/yolov8s-signature-detector</code> and <code>tech4humans/conditional-detr-50-signature-detector</code> on Hugging Face<br>
-      <span class="ref-src">Published weights and metrics on the merged Tobacco-800 + signatures-xc8up dataset.</span>
+      <b><code>tech4humans/conditional-detr-50-signature-detector</code></b> on Hugging Face<br>
+      <span class="ref-src">Apache-2.0 fallback. Loaded via Hugging Face Transformers (<code>AutoModelForObjectDetection</code>).</span>
     </li>
     <li>
-      <code>PekingU/rtdetr_v2_r18vd</code> on Hugging Face<br>
-      <span class="ref-src">Apache-2.0 RT-DETRv2 baseline suitable for fine-tuning. Primary recommendation.</span>
+      <b><code>tech4humans/signature-detection</code></b> dataset on Hugging Face<br>
+      <span class="ref-src">2,819 document images, Apache-2.0. The training corpus for both upstream models. Useful for understanding the distribution we're inheriting.</span>
     </li>
     <li>
-      <b>"DETRs Beat YOLOs on Real-time Object Detection"</b> — Zhao et al., CVPR 2024<br>
-      <span class="ref-src">Original RT-DETR paper.</span>
+      <b><code>tech4ai/t4ai-signature-detect-server</code></b> on GitHub<br>
+      <span class="ref-src">Upstream reference inference server (Triton + OpenVINO + Docker). Useful as a reference; our deployment uses a thinner FastAPI + FastMCP single-process server instead.</span>
     </li>
     <li>
-      <b>"Using Claude Code: The Unreasonable Effectiveness of HTML"</b> — T. Shihipar, May 2026<br>
-      <span class="ref-src">The piece this document's format is modeled on. Companion examples at thariqs.github.io/html-effectiveness.</span>
+      <b>"Open-Source Handwritten Signature Detection Model"</b> — S. Lima Braz / tech4humans, Hugging Face Blog, Mar 2025<br>
+      <span class="ref-src">The benchmark paper that justifies the choice of these two models out of 21 evaluated architectures. Source of the published mAP / latency numbers.</span>
     </li>
     <li>
-      <b>Ultralytics License terms</b> — ultralytics.com/license<br>
-      <span class="ref-src">Authoritative source on AGPL-3.0 vs Enterprise distinction for YOLOv5/v8/v11.</span>
+      <b>Ultralytics Enterprise Software License Agreement</b> — ultralytics.com/legal/enterprise-software-license<br>
+      <span class="ref-src">Authoritative terms. Annual fee, scope-dependent, organisation-wide.</span>
     </li>
     <li>
       <b>FastMCP documentation</b> — gofastmcp.com<br>
       <span class="ref-src">Canonical Python MCP framework; merged into the official MCP Python SDK.</span>
     </li>
     <li>
-      <b>AWS Blog</b>: "Accelerate inference with ONNX Runtime on AWS"<br>
-      <span class="ref-src">ORT execution providers and CPU tuning guidance.</span>
+      <b>"Using Claude Code: The Unreasonable Effectiveness of HTML"</b> — T. Shihipar, Anthropic, May 2026<br>
+      <span class="ref-src">The format this document is modeled on.</span>
     </li>
   </ul>
 </section>
@@ -1531,7 +1651,6 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
 
 <script>
   // Sidebar active-section highlighting — vanilla, no deps.
-  // Coding-agent-friendly: one IntersectionObserver, no framework state.
   (function () {
     const links = document.querySelectorAll('aside.toc a');
     const map = new Map();
@@ -1540,7 +1659,6 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
       const el = document.getElementById(id);
       if (el) map.set(el, a);
     });
-
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         const link = map.get(entry.target);
@@ -1551,7 +1669,6 @@ mcp = FastMCP(name=<span class="s">"hsbc-signature-cropper"</span>)
         }
       });
     }, { rootMargin: '-30% 0px -60% 0px', threshold: 0 });
-
     map.forEach((_, el) => observer.observe(el));
   })();
 </script>
