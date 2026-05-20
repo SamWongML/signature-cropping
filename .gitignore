@@ -1,1 +1,28 @@
 temp
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+.DS_Store
+
+# Model weights are pulled at build time, not checked in
+models/*.onnx
+models/*.pt
+models/*.bin
+!models/.gitkeep
+
+# Local fixtures with real customer data must never be committed
+tests/fixtures/private/
+
+# Docker
+*.pid

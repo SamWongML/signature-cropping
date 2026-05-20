@@ -1,0 +1,49 @@
+{
+  "family": "sigcrop",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "2048",
+  "memory": "4096",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  },
+  "executionRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/sigcrop-task-execution",
+  "taskRoleArn": "arn:aws:iam::<ACCOUNT_ID>:role/sigcrop-task",
+  "containerDefinitions": [
+    {
+      "name": "sigcrop",
+      "image": "<ACCOUNT_ID>.dkr.ecr.<REGION>.amazonaws.com/sigcrop:<TAG>",
+      "essential": true,
+      "portMappings": [
+        { "containerPort": 8080, "protocol": "tcp", "appProtocol": "http" }
+      ],
+      "environment": [
+        { "name": "SIGCROP_LOG_LEVEL", "value": "INFO" },
+        { "name": "SIGCROP_INTRA_OP_NUM_THREADS", "value": "2" },
+        { "name": "OMP_NUM_THREADS", "value": "2" }
+      ],
+      "secrets": [
+        {
+          "name": "SIGCROP_SERVICE_TOKEN_HMAC_KEY",
+          "valueFrom": "arn:aws:secretsmanager:<REGION>:<ACCOUNT_ID>:secret:sigcrop/token-hmac-key"
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/readyz || exit 1"],
+        "interval": 15,
+        "timeout": 3,
+        "retries": 3,
+        "startPeriod": 30
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/sigcrop",
+          "awslogs-region": "<REGION>",
+          "awslogs-stream-prefix": "sigcrop"
+        }
+      }
+    }
+  ]
+}
