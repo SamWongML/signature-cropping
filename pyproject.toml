@@ -1,0 +1,115 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "sigcrop"
+version = "0.1.0"
+description = "CPU-only signature cropping service (REST + MCP) for scanned bank forms."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "signature-cropping team" }]
+
+dependencies = [
+  # Web + MCP
+  "fastapi>=0.115,<0.117",
+  "uvicorn[standard]>=0.30,<0.33",
+  "pydantic>=2.8,<3",
+  "pydantic-settings>=2.4,<3",
+  "fastmcp>=0.2,<1",
+  "python-multipart>=0.0.9",
+
+  # Vision / IO
+  "opencv-python-headless>=4.10,<5",
+  "pillow>=10.4,<12",
+  "pymupdf>=1.24,<2",
+  "numpy>=1.26,<3",
+
+  # Inference (OpenVINO EP shipped via this wheel)
+  "onnxruntime-openvino>=1.18,<2",
+
+  # Build-time export deps (also imported at startup for the image processor)
+  "transformers>=4.45,<5",
+  "optimum[onnxruntime]>=1.22,<2",
+  "onnx>=1.16,<2",
+  "huggingface-hub>=0.24,<1",
+  "python-magic>=0.4.27,<1",
+
+  # AWS / observability
+  "boto3>=1.35,<2",
+  "structlog>=24.4,<26",
+  "prometheus-client>=0.20,<1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.24,<1",
+  "httpx>=0.27,<1",
+  "ruff>=0.6,<1",
+  "mypy>=1.11,<2",
+  "types-Pillow",
+  "locust>=2.31,<3",
+]
+train = [
+  "torch>=2.4,<3",
+  "datasets>=3.0,<4",
+]
+
+[project.scripts]
+sigcrop = "sigcrop.cli.main:main"
+sigcrop-api = "sigcrop.api.app:run"
+sigcrop-mcp = "sigcrop.mcp.server:run"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/sigcrop"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "S", "A", "PT", "RET", "SIM"]
+ignore = [
+  "S101",   # asserts are fine in tests
+  "N818",   # SigcropError subclasses use natural names (InvalidMime, CorruptFile, …)
+  "B008",   # FastAPI's File()/Form()/Depends() defaults are idiomatic
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/fixtures/_synthesize.py" = ["S311"]  # deterministic fixture, not crypto
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["sigcrop"]
+mypy_path = "src"
+warn_unused_ignores = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+  "cv2.*",
+  "fitz.*",
+  "fastmcp.*",
+  "onnxruntime.*",
+  "magic.*",
+  "transformers.*",
+  "optimum.*",
+  "huggingface_hub.*",
+  "boto3.*",
+  "botocore.*",
+]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+asyncio_mode = "auto"
+markers = [
+  "slow: takes more than 1s",
+  "integration: spins up the FastAPI app",
+  "needs_model: requires a real ONNX model in models/",
+]

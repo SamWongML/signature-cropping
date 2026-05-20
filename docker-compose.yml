@@ -1,0 +1,12 @@
+services:
+  api:
+    build: .
+    image: sigcrop:dev
+    platform: linux/amd64
+    ports:
+      - "8080:8080"
+    environment:
+      SIGCROP_LOG_LEVEL: INFO
+      SIGCROP_S3_BUCKET: ""
+    volumes:
+      - ./models:/opt/sigcrop/models:ro
