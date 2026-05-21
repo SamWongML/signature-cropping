@@ -28,6 +28,16 @@ REGISTRY: dict[str, ModelRecord] = {
         training_lineage_hash="tech4humans/conditional-detr-50-signature-detector",
         metrics={"map50": 0.937, "map50_95": 0.653},
     ),
+    # AGPL-3.0 weights (Ultralytics derivative). Accepted for MVP A/B
+    # evaluation only — see docs/ARCHITECTURE.md §9.
+    "yolov8s-signature-2026.05.21": ModelRecord(
+        version="yolov8s-signature-2026.05.21",
+        filename="yolov8s_signature.onnx",
+        sha256="",  # ops pins after `make fetch-yolo` succeeds
+        license="AGPL-3.0",
+        training_lineage_hash="tech4humans/yolov8s-signature-detector",
+        metrics={"map50": 0.940, "precision": 0.9474, "recall": 0.8972},
+    ),
 }
 
 

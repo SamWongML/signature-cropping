@@ -9,7 +9,6 @@ from typing import Any
 from urllib.parse import unquote, urlparse
 
 from sigcrop.api.schemas import CropOptions, CropResponse, ModelInfo
-from sigcrop.config import get_settings
 from sigcrop.errors import CorruptFile, InvalidMime
 from sigcrop.pipeline.run import run_pipeline, run_pipeline_regions_only
 
@@ -75,10 +74,15 @@ async def list_signature_regions_tool(file_uri: str) -> dict[str, Any]:
 
 
 def get_model_info_tool() -> ModelInfo:
-    settings = get_settings()
+    from sigcrop.models.registry import REGISTRY
+    from sigcrop.pipeline.detector import get_detector
+
+    detector = get_detector()
+    record = REGISTRY.get(detector.model_version)
+    metrics = record.metrics if record is not None else {}
     return ModelInfo(
-        model_version=settings.model_version,
-        training_lineage_hash=settings.model_hf_id,
-        metrics={"map50": 0.937},
-        license="Apache-2.0",
+        model_version=detector.model_version,
+        training_lineage_hash=detector.training_lineage_hash,
+        metrics=metrics,
+        license=detector.model_license,
     )

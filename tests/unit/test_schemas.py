@@ -10,7 +10,11 @@ from sigcrop.api.schemas import BBoxNorm, CropOptions, ReturnFormat
 
 def test_crop_options_defaults() -> None:
     opts = CropOptions()
-    assert opts.confidence_threshold == 0.55
+    # confidence_threshold and nms_iou default to None — the active detector
+    # backend supplies its own tuned default when these are unset.
+    assert opts.confidence_threshold is None
+    assert opts.nms_iou is None
+    assert opts.detector_backend is None
     assert opts.padding_pct == 0.08
     assert opts.apply_mask is False
     assert opts.return_format is ReturnFormat.INLINE_B64

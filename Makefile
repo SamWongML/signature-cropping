@@ -1,4 +1,4 @@
-.PHONY: install lint test bench docker run-api run-mcp clean
+.PHONY: install lint test bench docker run-api run-mcp clean fetch-detr fetch-yolo
 
 PY ?= python3.11
 VENV ?= .venv
@@ -19,6 +19,12 @@ test:
 
 bench:
 	$(PYBIN) bench/latency.py
+
+fetch-detr:
+	$(PYBIN) scripts/fetch_pretrained.py --backend conditional-detr --out-dir models
+
+fetch-yolo:
+	$(PYBIN) scripts/fetch_pretrained.py --backend yolov8 --out-dir models
 
 docker:
 	docker build --platform=linux/amd64 -t sigcrop:dev .

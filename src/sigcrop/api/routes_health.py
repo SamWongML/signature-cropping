@@ -5,8 +5,8 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from sigcrop.api.schemas import ModelInfo
-from sigcrop.config import get_settings
 from sigcrop.errors import ModelUnavailable
+from sigcrop.models.registry import REGISTRY
 from sigcrop.pipeline.detector import get_detector
 
 router = APIRouter()
@@ -28,10 +28,11 @@ def readyz() -> dict[str, str]:
 
 @router.get("/v1/model", response_model=ModelInfo)
 def model_info() -> ModelInfo:
-    settings = get_settings()
+    detector = get_detector()
+    record = REGISTRY.get(detector.model_version)
     return ModelInfo(
-        model_version=settings.model_version,
-        training_lineage_hash="",
-        metrics={},
-        license="Apache-2.0",
+        model_version=detector.model_version,
+        training_lineage_hash=detector.training_lineage_hash,
+        metrics=record.metrics if record is not None else {},
+        license=detector.model_license,
     )
