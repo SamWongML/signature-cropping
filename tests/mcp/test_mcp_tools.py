@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from sigcrop.errors import CorruptFile, InvalidMime
@@ -29,7 +31,7 @@ def test_resolve_unknown_scheme_rejected() -> None:
         _resolve_file_uri("ftp://example.com/x.png")
 
 
-def test_resolve_missing_file_rejected(tmp_path) -> None:
+def test_resolve_missing_file_rejected(tmp_path: Path) -> None:
     missing = tmp_path / "does-not-exist.png"
     with pytest.raises(CorruptFile):
         _resolve_file_uri(f"file://{missing}")

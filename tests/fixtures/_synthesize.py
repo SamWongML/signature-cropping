@@ -46,11 +46,11 @@ def render(page_w: int = PAGE_W, page_h: int = PAGE_H, seed: int = SEED) -> Imag
 
     # Faux labels (just rectangles, no real text — keep deps minimal).
     for ry in (250, 450, 650, 850, 1050, 1250):
-        draw.rectangle([(140, ry), (240, ry + 20)], fill=(80, 80, 80))
+        draw.rectangle(((140, ry), (240, ry + 20)), fill=(80, 80, 80))
 
     # Signature box near the bottom, with a scribble inside it.
     sig_x, sig_y, sig_w, sig_h = 300, 1820, 700, 220
-    draw.rectangle([(sig_x, sig_y), (sig_x + sig_w, sig_y + sig_h)],
+    draw.rectangle(((sig_x, sig_y), (sig_x + sig_w, sig_y + sig_h)),
                    outline=(50, 50, 50), width=2)
     _scribble(draw, sig_x + 40, sig_y + 30, sig_w - 80, sig_h - 60, rng)
 
