@@ -1,7 +1,8 @@
 """End-to-end pipeline runner shared by REST and MCP.
 
 One implementation, two callers — matches CLAUDE.md's "one way to do each
-thing" rule.
+thing" rule. Backend selection comes from `options.detector_backend` (per
+request) falling back to `settings.detector_backend`.
 """
 
 from __future__ import annotations
@@ -32,8 +33,16 @@ def run_pipeline(
     options: CropOptions,
     request_id: str,
 ) -> CropResponse:
-    detector = get_detector()
+    detector = get_detector(options.detector_backend)
     detector.warm_up()
+
+    conf_threshold = (
+        options.confidence_threshold
+        if options.confidence_threshold is not None
+        else detector.default_confidence
+    )
+    nms_iou = options.nms_iou if options.nms_iou is not None else detector.default_nms_iou
+    pre_spec = detector.preprocess_spec
 
     pre_ms = 0.0
     inf_ms = 0.0
@@ -46,7 +55,7 @@ def run_pipeline(
 
     for page_index, page_bgr in enumerate(doc.pages):
         t_pre = time.perf_counter()
-        pp = preprocess_page(page_bgr, page_index=page_index)
+        pp = preprocess_page(page_bgr, page_index=page_index, spec=pre_spec)
         candidates = find_candidate_regions(pp.src_bgr)
         pre_ms += (time.perf_counter() - t_pre) * 1000.0
 
@@ -63,8 +72,8 @@ def run_pipeline(
             page_bgr=pp.src_bgr,
             letterbox=pp.letterbox,
             page_index=page_index + 1,
-            confidence_threshold=options.confidence_threshold,
-            nms_iou=0.5,
+            confidence_threshold=conf_threshold,
+            nms_iou=nms_iou,
             padding_pct=options.padding_pct,
             apply_mask=options.apply_mask,
         )

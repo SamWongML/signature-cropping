@@ -53,12 +53,22 @@ inside a request — the ONNX session uses `intra_op_num_threads = vCPU`.
 
 ## 3. Detector choice
 
-| Option | License | mAP@50 | CPU latency | Decision |
-|---|---|---|---|---|
-| **Conditional-DETR-R50 (`tech4humans/conditional-detr-50-signature-detector`)** | Apache-2.0 | 0.937 | 400–600 ms | **MVP — off-the-shelf, no training** |
-| RT-DETRv2-S (fine-tuned) | Apache-2.0 | ~0.94+ (post fine-tune) | 250–400 ms (INT8) | **Post-MVP** primary, once HSBC samples are labelled |
-| YOLOv11s (Ultralytics) | **AGPL-3.0** | 0.94 | 150 ms | Forbidden (license) |
-| Heuristics only | n/a | low recall | < 25 ms | Pre-filter only |
+Two backends ship in the MVP container. The active one is selected by
+`SIGCROP_DETECTOR_BACKEND` (default `conditional-detr`) and can be
+overridden per request via the `detector_backend` form field.
+
+| Backend (name) | Source | License | mAP@50 | CPU latency | Role |
+|---|---|---|---|---|---|
+| `conditional-detr` | `tech4humans/conditional-detr-50-signature-detector` | Apache-2.0 | 0.937 | 400–600 ms | **MVP default** — off-the-shelf, no training |
+| `yolov8` | `tech4humans/yolov8s-signature-detector` | **AGPL-3.0** | 0.940 (P=0.947, R=0.897) | 150–250 ms | **MVP A/B comparison only** — see §9 license carve-out |
+| RT-DETRv2-S (fine-tuned) | n/a (post-MVP) | Apache-2.0 | ~0.94+ (post fine-tune) | 250–400 ms (INT8) | Post-MVP primary, once HSBC samples are labelled |
+| Heuristics only | n/a | n/a | low recall | < 25 ms | Pre-filter only |
+
+Backend implementations live under `src/sigcrop/pipeline/detectors/` and
+implement the `DetectorBackend` ABC (model_version, license, default
+confidence/IoU, `PreprocessSpec`, `infer`). Adding a new backend means:
+new module in that package, append a `ModelRecord` to `models/registry.py`,
+register the class in `detectors/__init__.py`.
 
 The heuristic stage runs **before** the detector and prunes obviously
 empty regions (zero candidates → skip the detector for that page). It
@@ -182,11 +192,20 @@ weights bake into the image — **no network egress at inference time**.
 
 ## 9. License posture
 
-Detector: RT-DETRv2 (Apache-2.0). Datasets: Tobacco-800, tech4humans
-signature-detection (both Apache-2.0) plus in-house HSBC samples. The
-Ultralytics YOLO stack is AGPL-3.0 and excluded unless an Enterprise
-License is procured. See `temp/implementation_plan.md` §3 for the full
-analysis.
+Primary detector: Conditional-DETR-R50 (Apache-2.0). Datasets: Tobacco-800,
+tech4humans signature-detection (both Apache-2.0) plus in-house HSBC samples.
+
+**MVP carve-out (temporary):** the `yolov8` backend ships
+`tech4humans/yolov8s-signature-detector` weights, which are AGPL-3.0
+(Ultralytics derivative). It is included so the team can A/B against
+ConditionalDETR on the same dataset family without spending weeks on
+training. **Productionization gate**: before shipping the `yolov8` backend
+to any environment exposed outside the team, either (a) acquire an
+Ultralytics Enterprise License, or (b) retrain on the same datasets with a
+permissive-licensed architecture (YOLOX / RT-DETRv2 / RF-DETR — all
+Apache-2.0). Until one of those holds, `SIGCROP_DETECTOR_BACKEND` must
+remain `conditional-detr` in production deployments. See
+`temp/implementation_plan.md` §3 for the full analysis.
 
 ## 10. Out of scope
 

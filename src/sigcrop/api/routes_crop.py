@@ -19,19 +19,23 @@ router = APIRouter(
 @router.post("/crop-signature", response_model=CropResponse)
 async def crop_signature(
     file: UploadFile = File(...),
-    confidence_threshold: float = Form(0.55),
+    confidence_threshold: float | None = Form(None),
+    nms_iou: float | None = Form(None),
     padding_pct: float = Form(0.08),
     apply_mask: bool = Form(False),
     return_format: ReturnFormat = Form(ReturnFormat.INLINE_B64),
     s3_prefix: str | None = Form(None),
+    detector_backend: str | None = Form(None),
     req_id: str = Depends(request_id),
 ) -> CropResponse:
     options = CropOptions(
         confidence_threshold=confidence_threshold,
+        nms_iou=nms_iou,
         padding_pct=padding_pct,
         apply_mask=apply_mask,
         return_format=return_format,
         s3_prefix=s3_prefix,
+        detector_backend=detector_backend,
         request_id=req_id,
     )
     try:

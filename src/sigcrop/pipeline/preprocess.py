@@ -4,9 +4,10 @@ Operations (in order):
 1. Deskew: angle from `cv2.minAreaRect` of the ink mask, capped at
    ±`settings.max_skew_deg`.
 2. Contrast: CLAHE on the L channel of LAB.
-3. Letterbox to a `letterbox_size` square, padded with 114-gray.
-4. Normalize to NCHW float32 with ImageNet mean/std (matches the
-   ConditionalDETR image processor configuration).
+3. Letterbox to the active backend's input size, padded with the backend's
+   letterbox fill color.
+4. Normalize to NCHW float32 using the active backend's normalization scheme
+   (ImageNet mean/std for ConditionalDETR; /255 only for YOLOv8).
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ import numpy as np
 
 from sigcrop.config import get_settings
 from sigcrop.errors import LowContrast
+from sigcrop.pipeline.detectors.base import PreprocessSpec
 
 # ImageNet normalization — used by every HF object-detection processor we ship.
 _IMAGENET_MEAN = np.array([0.485, 0.456, 0.406], dtype=np.float32)
@@ -84,7 +86,7 @@ def _apply_clahe(bgr: np.ndarray) -> np.ndarray:
     return cv2.cvtColor(cv2.merge([l_eq, a_chan, b_chan]), cv2.COLOR_LAB2BGR)
 
 
-def _letterbox(bgr: np.ndarray, target: int) -> tuple[np.ndarray, LetterboxParams]:
+def _letterbox(bgr: np.ndarray, target: int, fill: int) -> tuple[np.ndarray, LetterboxParams]:
     h, w = bgr.shape[:2]
     scale = target / max(h, w)
     new_w, new_h = int(round(w * scale)), int(round(h * scale))
@@ -92,7 +94,7 @@ def _letterbox(bgr: np.ndarray, target: int) -> tuple[np.ndarray, LetterboxParam
 
     pad_x = (target - new_w) // 2
     pad_y = (target - new_h) // 2
-    canvas = np.full((target, target, 3), 114, dtype=np.uint8)
+    canvas = np.full((target, target, 3), fill, dtype=np.uint8)
     canvas[pad_y : pad_y + new_h, pad_x : pad_x + new_w] = resized
 
     return canvas, LetterboxParams(
@@ -100,15 +102,36 @@ def _letterbox(bgr: np.ndarray, target: int) -> tuple[np.ndarray, LetterboxParam
     )
 
 
-def _to_nchw(bgr: np.ndarray) -> np.ndarray:
+def _to_nchw(bgr: np.ndarray, normalize: str) -> np.ndarray:
     rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0
-    rgb = (rgb - _IMAGENET_MEAN) / _IMAGENET_STD
+    if normalize == "imagenet":
+        rgb = (rgb - _IMAGENET_MEAN) / _IMAGENET_STD
+    elif normalize == "rescale":
+        pass  # already /255
+    else:
+        raise ValueError(f"Unknown normalize scheme: {normalize!r}")
     chw = np.transpose(rgb, (2, 0, 1))
     return np.expand_dims(chw, axis=0).astype(np.float32)
 
 
-def preprocess_page(page_bgr: np.ndarray, page_index: int) -> PreprocessedPage:
+def preprocess_page(
+    page_bgr: np.ndarray,
+    page_index: int,
+    spec: PreprocessSpec | None = None,
+) -> PreprocessedPage:
+    """Prepare one page for detector input.
+
+    `spec` selects normalization + letterbox fill for the active backend.
+    When `None`, defaults to the ConditionalDETR convention (ImageNet
+    normalization, 114-gray fill) so existing callers and tests keep working.
+    """
     settings = get_settings()
+    if spec is None:
+        spec = PreprocessSpec(
+            input_size=settings.detector_input_size,
+            letterbox_fill=114,
+            normalize="imagenet",
+        )
 
     gray = cv2.cvtColor(page_bgr, cv2.COLOR_BGR2GRAY)
     mean = float(gray.mean())
@@ -122,8 +145,8 @@ def preprocess_page(page_bgr: np.ndarray, page_index: int) -> PreprocessedPage:
     skew = _estimate_skew_deg(gray, settings.max_skew_deg)
     deskewed = _apply_skew(page_bgr, -skew)
     contrasted = _apply_clahe(deskewed)
-    letterbox_img, lb = _letterbox(contrasted, settings.detector_input_size)
-    model_input = _to_nchw(letterbox_img)
+    letterbox_img, lb = _letterbox(contrasted, spec.input_size, spec.letterbox_fill)
+    model_input = _to_nchw(letterbox_img, spec.normalize)
 
     return PreprocessedPage(
         page_index=page_index,

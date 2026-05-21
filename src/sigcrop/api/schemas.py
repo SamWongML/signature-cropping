@@ -15,12 +15,17 @@ class ReturnFormat(StrEnum):
 class CropOptions(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    confidence_threshold: float = Field(default=0.55, ge=0.0, le=1.0)
+    # When None, the active backend's tuned default is used (lets the
+    # ConditionalDETR / YOLOv8 calibration differences flow through).
+    confidence_threshold: float | None = Field(default=None, ge=0.0, le=1.0)
+    nms_iou: float | None = Field(default=None, ge=0.0, le=1.0)
     padding_pct: float = Field(default=0.08, ge=0.0, le=0.5)
     apply_mask: bool = False
     return_format: ReturnFormat = ReturnFormat.INLINE_B64
     s3_prefix: str | None = None
     request_id: str | None = None
+    # Per-request backend override for A/B comparison. None → settings default.
+    detector_backend: str | None = None
 
 
 class BBox(BaseModel):

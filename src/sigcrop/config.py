@@ -5,9 +5,12 @@ from __future__ import annotations
 import os
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+DetectorBackendName = Literal["conditional-detr", "yolov8"]
 
 
 def _resolve_thread_count(cores: int) -> int:
@@ -31,6 +34,10 @@ class Settings(BaseSettings):
 
     # Model
     model_dir: Path = Path("/opt/sigcrop/models")
+    # Active detector backend. Per-request override available via CropOptions.
+    detector_backend: DetectorBackendName = "conditional-detr"
+    # Legacy fields — still surfaced by /v1/model and /readyz; kept so the
+    # default ConditionalDETR path and its existing tests are unchanged.
     model_file: str = "conditional_detr_signature.onnx"
     model_version: str = "conditional-detr-50-fp32-2026.05.20"
     model_hf_id: str = "tech4humans/conditional-detr-50-signature-detector"
