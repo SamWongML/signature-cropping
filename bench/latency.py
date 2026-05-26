@@ -35,13 +35,14 @@ import statistics
 import sys
 import time
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from sigcrop.api.schemas import CropOptions
 from sigcrop.config import get_settings
 from sigcrop.models.registry import REGISTRY
-from sigcrop.pipeline.detector import available_backends, get_backend, get_detector
+from sigcrop.pipeline.detector import available_backends, get_detector
+from sigcrop.pipeline.detectors import get_backend
 from sigcrop.pipeline.run import run_pipeline
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -100,6 +101,22 @@ def _weights_present(backend_name: str) -> bool:
     if record is None:
         return False
     return (get_settings().model_dir / record.filename).is_file()
+
+
+def evaluate_gate(
+    latency_ms: dict[str, float], cold_start_ms: float, gate: LatencyGate
+) -> list[str]:
+    """Return human-readable budget violations; empty list means PASS."""
+    violations: list[str] = []
+    if latency_ms["p50"] > gate.p50_ms:
+        violations.append(f"P50 {latency_ms['p50']:.0f} > {gate.p50_ms:.0f} ms")
+    if latency_ms["p95"] > gate.p95_ms:
+        violations.append(f"P95 {latency_ms['p95']:.0f} > {gate.p95_ms:.0f} ms")
+    if latency_ms["p99"] > gate.p99_ms:
+        violations.append(f"P99 {latency_ms['p99']:.0f} > {gate.p99_ms:.0f} ms")
+    if cold_start_ms > gate.cold_start_ms:
+        violations.append(f"cold start {cold_start_ms:.0f} > {gate.cold_start_ms:.0f} ms")
+    return violations
 
 
 @dataclass
@@ -167,16 +184,7 @@ def bench_backend(backend_name: str, corpus: list[Path], contract: BenchContract
         "postprocess": statistics.fmean(post),
     }
 
-    gate = contract.gate
-    violations: list[str] = []
-    if latency["p50"] > gate.p50_ms:
-        violations.append(f"P50 {latency['p50']:.0f} > {gate.p50_ms:.0f} ms")
-    if latency["p95"] > gate.p95_ms:
-        violations.append(f"P95 {latency['p95']:.0f} > {gate.p95_ms:.0f} ms")
-    if latency["p99"] > gate.p99_ms:
-        violations.append(f"P99 {latency['p99']:.0f} > {gate.p99_ms:.0f} ms")
-    if cold_ms > gate.cold_start_ms:
-        violations.append(f"cold start {cold_ms:.0f} > {gate.cold_start_ms:.0f} ms")
+    violations = evaluate_gate(latency, cold_ms, contract.gate)
 
     return BackendResult(
         model_version=det.model_version,
@@ -266,7 +274,7 @@ def main() -> int:
     if args.json:
         artifact = {
             "contract_version": CONTRACT.version,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "config": {
                 "corpus_dir": str(corpus_dir),
                 "n_images": len(corpus),
