@@ -149,19 +149,18 @@ def bench_backend(backend_name: str, corpus: list[Path], contract: BenchContract
 
     for path in corpus:
         data = path.read_bytes()
-        # One representative run for detection accounting.
-        rep = run_pipeline(data, contract.mime, opts, request_id="bench")
-        detections.append(
-            {
-                "image": path.name,
-                "count": len(rep.signatures),
-                "confidences": [round(s.confidence, 3) for s in rep.signatures],
-            }
-        )
         for i in range(contract.warmup_iters + contract.measured_iters):
             start = time.perf_counter()
             resp = run_pipeline(data, contract.mime, opts, request_id="bench")
             ms = (time.perf_counter() - start) * 1000.0
+            if i == 0:  # detection accounting once per image (signatures are stable)
+                detections.append(
+                    {
+                        "image": path.name,
+                        "count": len(resp.signatures),
+                        "confidences": [round(s.confidence, 3) for s in resp.signatures],
+                    }
+                )
             if i >= contract.warmup_iters:
                 e2e.append(ms)
                 pre.append(resp.timing_ms.preprocess)

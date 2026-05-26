@@ -85,5 +85,5 @@ def test_contract_locks_section7_budget(latency: ModuleType) -> None:
         12_000.0,
     )
     assert _MONTAGE in latency.CONTRACT.corpus_exclude
-    assert latency.CONTRACT.warmup_iters >= 1
-    assert latency.CONTRACT.measured_iters >= 1
+    assert latency.CONTRACT.warmup_iters == 5
+    assert latency.CONTRACT.measured_iters == 30

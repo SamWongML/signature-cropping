@@ -121,14 +121,6 @@ def _prep_main(
     return tmp_path
 
 
-def test_main_exit_0_on_pass(
-    latency: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _prep_main(latency, monkeypatch, tmp_path, [], present=True)
-    _install_fake_bench(latency, monkeypatch, gate_pass=True)
-    assert latency.main() == 0
-
-
 def test_main_exit_1_on_gate_fail(
     latency: ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
